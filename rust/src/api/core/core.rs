@@ -1,109 +1,64 @@
-use crate::api::command::{Receive, Resp, SendFile, Start, Stop};
+use crate::api::command::upload_file_request::UploadFileEnum;
+use crate::api::command::{
+    share_file_client::ShareFileClient, share_file_server::*, upload_file_request, FileMetaData,
+    Resp, SendFile, UploadFileRequest,
+};
 use lazy_static::lazy_static;
-use log::{debug, error, info, log_enabled, Level};
+use log::error;
 use md5;
+use std::pin::Pin;
 use std::sync::Arc;
+use tokio::io::AsyncReadExt;
+use tokio::sync::mpsc;
 use tokio::{
-    io::{self, AsyncReadExt, AsyncWriteExt},
-    net::{TcpListener, TcpStream},
+    fs,
+    io::{self, AsyncWriteExt},
     sync::{
-        mpsc::{self, Receiver, Sender},
+        mpsc::{Receiver, Sender},
         Mutex,
     },
 };
-
+use tokio_stream::{wrappers::ReceiverStream, Stream, StreamExt};
+use tonic::{transport::Server, Request, Response, Status, Streaming};
 lazy_static! {
-    static ref JUSTSHARE_CORE: MutexJustShareCore = MutexJustShareCore::new();
+    pub static ref JUSTSHARE_CORE: MutexJustShareCore = MutexJustShareCore::new();
 }
 
-struct MutexJustShareCore {
-    core: std::sync::Arc<Mutex<Option<JustShareCore>>>,
-    runtime: AFPluginRuntime,
-}
-
-async fn start() {
-    env_logger::init();
-    error!("start justshare core");
-    JUSTSHARE_CORE.runtime.spawn(JUSTSHARE_CORE.handle_rx());
-}
-
-pub async fn init_core() {
-    *JUSTSHARE_CORE.core.lock().await =
-        Some(JustShareCore::new(JustShareCoreConfig { port: 8965 }));
-    start().await;
-}
-
-pub async fn stop() {
-    JUSTSHARE_CORE.core.lock().await.take();
-}
-
-pub async fn send_file(message: SendFile) {
-    JUSTSHARE_CORE.send_file(message).await;
-}
-
-pub async fn receive_file() {
-    let _ = JUSTSHARE_CORE
-        .core
-        .lock()
-        .await
-        .as_mut()
-        .unwrap()
-        .sender
-        .lock()
-        .await
-        .send("receive".to_string())
-        .await;
+pub struct MutexJustShareCore {
+    pub core: std::sync::Arc<Mutex<Option<JustShareCore>>>,
 }
 
 impl MutexJustShareCore {
-    fn new() -> Self {
-        Self {
+    pub fn new() -> MutexJustShareCore {
+        MutexJustShareCore {
             core: Arc::new(Mutex::new(None)),
-            runtime: AFPluginRuntime::new().unwrap(),
         }
     }
 
-    async fn send_file(&self, message: SendFile) {
+    pub async fn send_file(&self, message: SendFile) {
         let core_clone = Arc::clone(&self.core); // Create a clone of the Arc
-        self.runtime
-            .spawn(async move {
-                let mut core_lock = core_clone.lock().await; // Use the cloned Arc inside the async block
-                let core: &mut JustShareCore = core_lock.as_mut().unwrap();
-                let _ = core.send(message).await;
-            })
-            .await
-            .unwrap();
+        flutter_rust_bridge::spawn(async move {
+            let mut core_lock = core_clone.lock().await; // Use the cloned Arc inside the async block
+            let core: &mut JustShareCore = core_lock.as_mut().unwrap();
+            let _ = core.send(message).await;
+        })
+        .await
+        .unwrap();
     }
 
-    async fn handle_receive_file(&self) {
-        let core_clone = Arc::clone(&self.core); // Create a clone of the Arc
-        self.runtime
-            .spawn(async move {
-                let mut core_lock = core_clone.lock().await; // Use the cloned Arc inside the async block
-                let core: &mut JustShareCore = core_lock.as_mut().unwrap();
-                core.receive().await;
-            })
-            .await
-            .unwrap();
-    }
-    async fn handle_rx(&self) {
-        let mut core_lock = self.core.lock().await;
-        let core: &mut JustShareCore = core_lock.as_mut().unwrap();
+    pub async fn handle_receive_file(core: std::sync::Arc<Mutex<Option<JustShareCore>>>) {
+        error!("start handle receive file");
+        let core_clone = core.clone();
+        flutter_rust_bridge::spawn(async move {
+            error!("ENTER SPAWN start handle receive file");
 
-        let mut receiver = core.receiver.lock().await;
-        error!("start to hand message");
-        loop {
-            match receiver.recv().await {
-                Some(c) => {
-                    error!("receive: {c}");
-                    self.handle_receive_file().await;
-                }
-                None => {}
-            }
-        }
+            core_clone.lock().await.as_mut().unwrap().receive().await;
+        })
+        .await
+        .unwrap();
     }
 }
-struct JustShareCore {
+pub struct JustShareCore {
     pub config: JustShareCoreConfig,
     pub sender: Arc<Mutex<Sender<String>>>,
     pub receiver: Arc<Mutex<Receiver<String>>>,
@@ -111,11 +66,11 @@ struct JustShareCore {
 }
 
 impl JustShareCore {
-    fn new(config: JustShareCoreConfig) -> Self {
+    pub fn new(config: JustShareCoreConfig) -> JustShareCore {
         let (sender, receiver) = mpsc::channel(32);
         let sender = Arc::new(Mutex::new(sender));
         let receiver = Arc::new(Mutex::new(receiver));
-        let c = Self {
+        let c = JustShareCore {
             config,
             sender,
             receiver,
@@ -127,206 +82,156 @@ impl JustShareCore {
 
     async fn send(&mut self, message: SendFile) -> io::Result<()> {
         error!("send: {:?}", message);
-        let mut stream = TcpStream::connect(message.addr).await.unwrap();
-        self.send_file(&mut stream, &message.path).await
-    }
 
-    async fn receive(&mut self) {
-        let lis = TcpListener::bind("0.0.0.0:".to_owned() + &self.config.port.to_string()).await;
-        match lis {
-            Ok(l) => {
-                *self.listener.lock().await = Some(l);
-            }
-            Err(m) => panic!("{}", m),
-        }
-        loop {
-            let stream = self.listener.lock().await.as_ref().unwrap().accept().await;
-            let mut mut_stream = stream.unwrap().0;
-            let res = self.receive_file(&mut mut_stream).await;
-            // println!("res: {res.unwrap()}");
-        }
-    }
+        let client = ShareFileClient::connect(format!("http://{:}", message.addr)).await;
+        let file_path = message.path.clone();
 
-    async fn send_file(&mut self, stream: &mut TcpStream, file_path: &str) -> io::Result<()> {
-        let mut file = tokio::fs::File::open(file_path).await?;
-
-        // Compute MD5 checksum of the file.
-        let md5_checksum = md5::compute(tokio::fs::read(file_path).await?);
-        let file_name = file_path.split("/").last().unwrap_or_default();
+        let file = tokio::fs::File::open(file_path.clone()).await?;
         let file_metadata = file.metadata().await?;
         let file_size = file_metadata.len();
 
-        // Send file name, file size, and MD5 checksum.
-        stream.write_all(file_name.as_bytes()).await?;
-        stream.write_all(&file_size.to_le_bytes()).await?;
-        stream.write_all(&md5_checksum.0).await?;
+        drop(file);
+        // Compute MD5 checksum of the file.
+        let file_byte: Vec<u8> = fs::read(message.path).await?;
 
-        // Send the file content.
-        let mut buffer = vec![0; 1024];
-        loop {
-            let n = file.read(&mut buffer).await?;
-            if n == 0 {
-                break;
+        let md5_checksum = md5::compute(file_byte.clone());
+        let file_name = file_path.split("/").last().unwrap_or_default();
+
+        let (tx, rx) = mpsc::channel(128);
+        let request_stream = ReceiverStream::new(rx);
+
+        let request = UploadFileRequest {
+            upload_file_enum: Some(UploadFileEnum::MetaData(FileMetaData {
+                file_name: file_name.to_string(),
+                file_size: file_size as i32,
+                md5: format!("{:x}", md5_checksum),
+            })),
+        };
+
+        let response = client.unwrap().upload_file(request_stream).await.unwrap();
+        let mut resp_stream = response.into_inner();
+        flutter_rust_bridge::spawn(async move {
+            error!("start send request: {:?}", request);
+
+            tx.send(request).await.unwrap();
+            error!("finish send request: file meta data",);
+            while let Some(received) = resp_stream.next().await {
+                let received = received.unwrap();
+                error!("\treceived message: `{}`", received.msg);
+
+                match received.code {
+                    1 => {
+                        error!("UploadFileRequest: {:?},start to send file byte", received);
+
+                        let mut file = tokio::fs::File::open(file_path.clone()).await.unwrap();
+                        let mut buffer = [0; 4096]; // 4KB buffer
+                        loop {
+                            let bytes_read = file.read(&mut buffer).await.unwrap();
+                            if bytes_read == 0 {
+                                break;
+                            }
+
+                            tx.send(UploadFileRequest {
+                                upload_file_enum: Some(UploadFileEnum::Content(buffer.to_vec())),
+                            })
+                            .await
+                            .unwrap();
+                        }
+                    }
+
+                    _r => {
+                        error!("UploadFileResponse: {:?}", received);
+                    }
+                }
             }
-            stream.write_all(&buffer[..n]).await?;
-        }
+        });
 
         Ok(())
     }
 
-    async fn receive_file(&self, stream: &mut TcpStream) -> io::Result<()> {
-        let mut file_name_buf = vec![0; 256]; // Assuming file name won't be longer than 256 bytes.
-        let mut file_size_buf = [0; 8];
-        let mut md5_buf = [0; 16];
+    async fn receive(&mut self) {
+        error!("start to listen lis: {:?}", self.listener);
+        let addr = format!("127.0.0.1:{}", &self.config.port.to_string())
+            .parse()
+            .unwrap();
+        let sf = MyShareFileServer::default();
+        println!("HealthServer + GreeterServer listening on {}", addr);
 
-        // Read the file name, file size, and MD5 checksum from the stream.
-        stream.read_exact(&mut file_name_buf).await?;
-        stream.read_exact(&mut file_size_buf).await?;
-        stream.read_exact(&mut md5_buf).await?;
-
-        let file_name = String::from_utf8_lossy(&file_name_buf);
-        let file_size = u64::from_le_bytes(file_size_buf);
-        let expected_md5 = md5::Digest(md5_buf);
-
-        // Read the file content.
-        let path = format!("/tmp{}", file_name.trim_matches(char::from(0)));
-        let mut file = tokio::fs::File::create(path).await?;
-        let mut total_bytes_read = 0;
-        let mut buffer = vec![0; 1024];
-        let mut file_data = Vec::new();
-        while total_bytes_read < file_size {
-            let n = stream.read(&mut buffer).await?;
-            if n == 0 {
-                break;
-            }
-            file_data.extend_from_slice(&buffer[..n]);
-            file.write_all(&buffer[..n]).await?;
-            total_bytes_read += n as u64;
-        }
-
-        // Verify MD5 checksum.
-        let computed_md5 = md5::compute(&file_data);
-        if computed_md5 != expected_md5 {
-            return Err(io::Error::new(io::ErrorKind::Other, "MD5 mismatch"));
-        }
-
-        Ok(())
+        Server::builder()
+            .add_service(ShareFileServer::new(sf))
+            .serve(addr)
+            .await
+            .unwrap();
     }
 }
+
+#[derive(Default)]
+pub struct MyShareFileServer {}
+type ResponseStream = Pin<Box<dyn Stream<Item = Result<Resp, Status>> + Send>>;
+
+#[tonic::async_trait]
+impl ShareFile for MyShareFileServer {
+    type UploadFileStream = ResponseStream;
+    async fn upload_file(
+        &self,
+        req: Request<tonic::Streaming<UploadFileRequest>>,
+    ) -> std::result::Result<Response<Self::UploadFileStream>, Status> {
+        let mut stream: Streaming<UploadFileRequest> = req.into_inner();
+        let mut file_path = String::new();
+        let mut file = None;
+        let (tx, rx) = mpsc::channel(128);
+        error!("start to receive upload file");
+        flutter_rust_bridge::spawn(async move {
+            while let Some(upload) = stream.message().await.unwrap() {
+                match upload.upload_file_enum {
+                    Some(upload_file_request::UploadFileEnum::MetaData(metadata)) => {
+                        error!("receive upload file meta data {:?}", metadata);
+
+                        // Process file metadata
+                        file_path =
+                            format!("/home/bobo/workspace/just_share/{}", metadata.file_name);
+                        error!("start to create file: {:?}", file_path);
+                        file = Some(tokio::fs::File::create(&file_path).await.map_err(|e| {
+                            Status::internal(format!("Failed to create file: {}", e))
+                        })?);
+                        let r = tx
+                            .send(Ok(Resp {
+                                code: 1,
+                                msg: "can send file byte".into(),
+                            }))
+                            .await
+                            .unwrap();
+                        error!("tell client to send file byte response: {:?}", r);
+                    }
+                    Some(upload_file_request::UploadFileEnum::Content(chunk)) => {
+                        // Process file chunk
+                        error!("receive upload file chunk");
+
+                        if let Some(file) = file.as_mut() {
+                            file.write_all(&chunk).await.map_err(|e| {
+                                Status::internal(format!("Failed to write to file: {}", e))
+                            })?;
+                        } else {
+                            return Err(Status::failed_precondition("No file metadata provided"));
+                        }
+                    }
+                    None => {
+                        return Err(Status::invalid_argument("No file data provided"));
+                    }
+                }
+            }
+            error!("stream end");
+            Ok(())
+        });
+
+        // echo just write the same data that was received
+        let out_stream = ReceiverStream::new(rx);
+
+        Ok(Response::new(Box::pin(out_stream) as Self::UploadFileStream))
+    }
+}
+
 #[derive(Clone)]
-struct JustShareCoreConfig {
+pub struct JustShareCoreConfig {
     pub port: u16,
-}
-
-use std::fmt::{Display, Formatter};
-use std::future::Future;
-
-use tokio::runtime::Runtime;
-use tokio::task::JoinHandle;
-
-struct AFPluginRuntime {
-    pub(crate) inner: Runtime,
-    #[cfg(feature = "single_thread")]
-    local: tokio::task::LocalSet,
-}
-
-impl Display for AFPluginRuntime {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if cfg!(feature = "single_thread") {
-            write!(f, "Runtime(single_thread)")
-        } else {
-            write!(f, "Runtime(multi_thread)")
-        }
-    }
-}
-
-impl AFPluginRuntime {
-    fn new() -> io::Result<Self> {
-        let inner = default_tokio_runtime()?;
-        Ok(Self {
-            inner,
-            #[cfg(feature = "single_thread")]
-            local: tokio::task::LocalSet::new(),
-        })
-    }
-
-    #[cfg(feature = "single_thread")]
-    #[track_caller]
-    fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
-    where
-        F: Future + 'static,
-    {
-        self.local.spawn_local(future)
-    }
-
-    #[cfg(not(feature = "single_thread"))]
-    #[track_caller]
-    fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
-    where
-        F: Future + Send + 'static,
-        <F as Future>::Output: Send + 'static,
-    {
-        self.inner.spawn(future)
-    }
-
-    #[cfg(feature = "single_thread")]
-    async fn run_until<F>(&self, future: F) -> F::Output
-    where
-        F: Future,
-    {
-        self.local.run_until(future).await
-    }
-
-    #[cfg(not(feature = "single_thread"))]
-    async fn run_until<F>(&self, future: F) -> F::Output
-    where
-        F: Future,
-    {
-        future.await
-    }
-
-    #[cfg(feature = "single_thread")]
-    #[track_caller]
-    fn block_on<F>(&self, f: F) -> F::Output
-    where
-        F: Future,
-    {
-        self.local.block_on(&self.inner, f)
-    }
-
-    #[cfg(not(feature = "single_thread"))]
-    #[track_caller]
-    fn block_on<F>(&self, f: F) -> F::Output
-    where
-        F: Future,
-    {
-        self.inner.block_on(f)
-    }
-}
-
-#[cfg(feature = "single_thread")]
-fn default_tokio_runtime() -> io::Result<Runtime> {
-    runtime::Builder::new_current_thread()
-        .thread_name("dispatch-rt-st")
-        .enable_io()
-        .enable_time()
-        .build()
-}
-
-#[cfg(not(feature = "single_thread"))]
-fn default_tokio_runtime() -> io::Result<Runtime> {
-    use log::error;
-    use tokio::runtime;
-
-    runtime::Builder::new_multi_thread()
-        .thread_name("dispatch-rt-mt")
-        .enable_io()
-        .enable_time()
-        .on_thread_start(move || {
-            error!("{:?} thread started", std::thread::current(),);
-        })
-        .on_thread_stop(move || {
-            error!("{:?} thread stopping", std::thread::current(),);
-        })
-        .build()
 }

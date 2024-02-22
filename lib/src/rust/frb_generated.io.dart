@@ -3,9 +3,9 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/api.dart';
 import 'api/command.dart';
 import 'api/core/core.dart';
-import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
@@ -20,17 +20,92 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     required super.portManager,
   });
 
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ArcMutexOptionTokioNetTcpListenerPtr =>
+          wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListenerPtr;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ArcMutexReceiverStringPtr => wire
+          ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverStringPtr;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ArcMutexSenderStringPtr => wire
+          ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderStringPtr;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_StdSyncArcMutexOptionJustShareCorePtr =>
+          wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCorePtr;
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          dynamic raw);
+
+  @protected
+  ArcMutexReceiverString
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          dynamic raw);
+
+  @protected
+  ArcMutexSenderString
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          dynamic raw);
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          dynamic raw);
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          dynamic raw);
+
+  @protected
+  ArcMutexReceiverString
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          dynamic raw);
+
+  @protected
+  ArcMutexSenderString
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          dynamic raw);
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          dynamic raw);
+
   @protected
   String dco_decode_String(dynamic raw);
+
+  @protected
+  JustShareCoreConfig dco_decode_box_autoadd_just_share_core_config(
+      dynamic raw);
+
+  @protected
+  MutexJustShareCore dco_decode_box_autoadd_mutex_just_share_core(dynamic raw);
 
   @protected
   SendFile dco_decode_box_autoadd_send_file(dynamic raw);
 
   @protected
+  JustShareCore dco_decode_just_share_core(dynamic raw);
+
+  @protected
+  JustShareCoreConfig dco_decode_just_share_core_config(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  MutexJustShareCore dco_decode_mutex_just_share_core(dynamic raw);
+
+  @protected
   SendFile dco_decode_send_file(dynamic raw);
+
+  @protected
+  int dco_decode_u_16(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -39,16 +114,81 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
+  int dco_decode_usize(dynamic raw);
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          SseDeserializer deserializer);
+
+  @protected
+  ArcMutexReceiverString
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          SseDeserializer deserializer);
+
+  @protected
+  ArcMutexSenderString
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          SseDeserializer deserializer);
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          SseDeserializer deserializer);
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          SseDeserializer deserializer);
+
+  @protected
+  ArcMutexReceiverString
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          SseDeserializer deserializer);
+
+  @protected
+  ArcMutexSenderString
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          SseDeserializer deserializer);
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          SseDeserializer deserializer);
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  JustShareCoreConfig sse_decode_box_autoadd_just_share_core_config(
+      SseDeserializer deserializer);
+
+  @protected
+  MutexJustShareCore sse_decode_box_autoadd_mutex_just_share_core(
+      SseDeserializer deserializer);
 
   @protected
   SendFile sse_decode_box_autoadd_send_file(SseDeserializer deserializer);
 
   @protected
+  JustShareCore sse_decode_just_share_core(SseDeserializer deserializer);
+
+  @protected
+  JustShareCoreConfig sse_decode_just_share_core_config(
+      SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  MutexJustShareCore sse_decode_mutex_just_share_core(
+      SseDeserializer deserializer);
+
+  @protected
   SendFile sse_decode_send_file(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -57,30 +197,98 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          ArcMutexOptionTokioNetTcpListener self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          ArcMutexReceiverString self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          ArcMutexSenderString self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          StdSyncArcMutexOptionJustShareCore self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          ArcMutexOptionTokioNetTcpListener self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          ArcMutexReceiverString self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          ArcMutexSenderString self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          StdSyncArcMutexOptionJustShareCore self, SseSerializer serializer);
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_just_share_core_config(
+      JustShareCoreConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_mutex_just_share_core(
+      MutexJustShareCore self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_send_file(
       SendFile self, SseSerializer serializer);
 
   @protected
+  void sse_encode_just_share_core(JustShareCore self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_just_share_core_config(
+      JustShareCoreConfig self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_mutex_just_share_core(
+      MutexJustShareCore self, SseSerializer serializer);
+
+  @protected
   void sse_encode_send_file(SendFile self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_usize(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -102,4 +310,132 @@ class RustLibWire implements BaseWire {
   /// The symbols are looked up in [dynamicLibrary].
   RustLibWire(ffi.DynamicLibrary dynamicLibrary)
       : _lookup = dynamicLibrary.lookup;
+
+  void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListenerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListenerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverStringPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverStringPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverStringPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverStringPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderStringPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderStringPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderStringPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderStringPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCorePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCorePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCorePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_just_share_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCorePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }

@@ -3,9 +3,9 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/api.dart';
 import 'api/command.dart';
 import 'api/core/core.dart';
-import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.io.dart' if (dart.library.html) 'frb_generated.web.dart';
@@ -66,17 +66,68 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Stream<String> handleStream({dynamic hint});
+
+  Future<void> initApp({dynamic hint});
+
   Future<void> initCore({dynamic hint});
 
   Future<void> receiveFile({dynamic hint});
 
   Future<void> sendFile({required SendFile message, dynamic hint});
 
+  Future<void> start({dynamic hint});
+
   Future<void> stop({dynamic hint});
 
-  String greet({required String name, dynamic hint});
+  Future<JustShareCore> justShareCoreNew(
+      {required JustShareCoreConfig config, dynamic hint});
 
-  Future<void> initApp({dynamic hint});
+  Future<void> mutexJustShareCoreHandleReceiveFile(
+      {required StdSyncArcMutexOptionJustShareCore core, dynamic hint});
+
+  Future<MutexJustShareCore> mutexJustShareCoreNew({dynamic hint});
+
+  Future<void> mutexJustShareCoreSendFile(
+      {required MutexJustShareCore that,
+      required SendFile message,
+      dynamic hint});
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ArcMutexOptionTokioNetTcpListener;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ArcMutexOptionTokioNetTcpListener;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ArcMutexOptionTokioNetTcpListenerPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ArcMutexReceiverString;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ArcMutexReceiverString;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ArcMutexReceiverStringPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ArcMutexSenderString;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ArcMutexSenderString;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ArcMutexSenderStringPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_StdSyncArcMutexOptionJustShareCore;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_StdSyncArcMutexOptionJustShareCore;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_StdSyncArcMutexOptionJustShareCorePtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -88,12 +139,60 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<void> initCore({dynamic hint}) {
+  Stream<String> handleStream({dynamic hint}) {
+    return handler.executeStream(StreamTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 7, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kHandleStreamConstMeta,
+      argValues: [],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kHandleStreamConstMeta => const TaskConstMeta(
+        debugName: "handle_stream",
+        argNames: [],
+      );
+
+  @override
+  Future<void> initApp({dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 1, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kInitAppConstMeta,
+      argValues: [],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kInitAppConstMeta => const TaskConstMeta(
+        debugName: "init_app",
+        argNames: [],
+      );
+
+  @override
+  Future<void> initCore({dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 2, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -117,7 +216,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
+            funcId: 6, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -142,7 +241,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_box_autoadd_send_file(message, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
+            funcId: 5, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -161,12 +260,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> start({dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 3, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kStartConstMeta,
+      argValues: [],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kStartConstMeta => const TaskConstMeta(
+        debugName: "start",
+        argNames: [],
+      );
+
+  @override
   Future<void> stop({dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 2, port: port_);
+            funcId: 4, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -185,57 +308,225 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  String greet({required String name, dynamic hint}) {
-    return handler.executeSync(SyncTask(
-      callFfi: () {
+  Future<JustShareCore> justShareCoreNew(
+      {required JustShareCoreConfig config, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(name, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        sse_encode_box_autoadd_just_share_core_config(config, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 11, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
+        decodeSuccessData: sse_decode_just_share_core,
         decodeErrorData: null,
       ),
-      constMeta: kGreetConstMeta,
-      argValues: [name],
+      constMeta: kJustShareCoreNewConstMeta,
+      argValues: [config],
       apiImpl: this,
       hint: hint,
     ));
   }
 
-  TaskConstMeta get kGreetConstMeta => const TaskConstMeta(
-        debugName: "greet",
-        argNames: ["name"],
+  TaskConstMeta get kJustShareCoreNewConstMeta => const TaskConstMeta(
+        debugName: "JustShareCore_new",
+        argNames: ["config"],
       );
 
   @override
-  Future<void> initApp({dynamic hint}) {
+  Future<void> mutexJustShareCoreHandleReceiveFile(
+      {required StdSyncArcMutexOptionJustShareCore core, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+            core, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
+            funcId: 10, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: null,
       ),
-      constMeta: kInitAppConstMeta,
+      constMeta: kMutexJustShareCoreHandleReceiveFileConstMeta,
+      argValues: [core],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kMutexJustShareCoreHandleReceiveFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "MutexJustShareCore_handle_receive_file",
+        argNames: ["core"],
+      );
+
+  @override
+  Future<MutexJustShareCore> mutexJustShareCoreNew({dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 8, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_mutex_just_share_core,
+        decodeErrorData: null,
+      ),
+      constMeta: kMutexJustShareCoreNewConstMeta,
       argValues: [],
       apiImpl: this,
       hint: hint,
     ));
   }
 
-  TaskConstMeta get kInitAppConstMeta => const TaskConstMeta(
-        debugName: "init_app",
+  TaskConstMeta get kMutexJustShareCoreNewConstMeta => const TaskConstMeta(
+        debugName: "MutexJustShareCore_new",
         argNames: [],
       );
+
+  @override
+  Future<void> mutexJustShareCoreSendFile(
+      {required MutexJustShareCore that,
+      required SendFile message,
+      dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_mutex_just_share_core(that, serializer);
+        sse_encode_box_autoadd_send_file(message, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 9, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kMutexJustShareCoreSendFileConstMeta,
+      argValues: [that, message],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kMutexJustShareCoreSendFileConstMeta => const TaskConstMeta(
+        debugName: "MutexJustShareCore_send_file",
+        argNames: ["that", "message"],
+      );
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ArcMutexOptionTokioNetTcpListener => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ArcMutexOptionTokioNetTcpListener => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ArcMutexReceiverString => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ArcMutexReceiverString => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ArcMutexSenderString => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ArcMutexSenderString => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_StdSyncArcMutexOptionJustShareCore =>
+          wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_StdSyncArcMutexOptionJustShareCore =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore;
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ArcMutexOptionTokioNetTcpListener.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ArcMutexReceiverString
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ArcMutexReceiverString.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ArcMutexSenderString
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ArcMutexSenderString.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return StdSyncArcMutexOptionJustShareCore.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ArcMutexOptionTokioNetTcpListener.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ArcMutexReceiverString
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ArcMutexReceiverString.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ArcMutexSenderString
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ArcMutexSenderString.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return StdSyncArcMutexOptionJustShareCore.dcoDecode(raw as List<dynamic>);
+  }
 
   @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  JustShareCoreConfig dco_decode_box_autoadd_just_share_core_config(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_just_share_core_config(raw);
+  }
+
+  @protected
+  MutexJustShareCore dco_decode_box_autoadd_mutex_just_share_core(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_mutex_just_share_core(raw);
   }
 
   @protected
@@ -245,9 +536,53 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JustShareCore dco_decode_just_share_core(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return JustShareCore(
+      config: dco_decode_just_share_core_config(arr[0]),
+      sender:
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+              arr[1]),
+      receiver:
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+              arr[2]),
+      listener:
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+              arr[3]),
+    );
+  }
+
+  @protected
+  JustShareCoreConfig dco_decode_just_share_core_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return JustShareCoreConfig(
+      port: dco_decode_u_16(arr[0]),
+    );
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  MutexJustShareCore dco_decode_mutex_just_share_core(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return MutexJustShareCore(
+      core:
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+              arr[0]),
+    );
   }
 
   @protected
@@ -263,6 +598,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int dco_decode_u_16(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
   int dco_decode_u_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -275,10 +616,102 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int dco_decode_usize(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64OrU64(raw);
+  }
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ArcMutexOptionTokioNetTcpListener.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ArcMutexReceiverString
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ArcMutexReceiverString.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ArcMutexSenderString
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ArcMutexSenderString.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return StdSyncArcMutexOptionJustShareCore.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ArcMutexOptionTokioNetTcpListener
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ArcMutexOptionTokioNetTcpListener.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ArcMutexReceiverString
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ArcMutexReceiverString.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ArcMutexSenderString
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ArcMutexSenderString.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  StdSyncArcMutexOptionJustShareCore
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return StdSyncArcMutexOptionJustShareCore.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  JustShareCoreConfig sse_decode_box_autoadd_just_share_core_config(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_just_share_core_config(deserializer));
+  }
+
+  @protected
+  MutexJustShareCore sse_decode_box_autoadd_mutex_just_share_core(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_mutex_just_share_core(deserializer));
   }
 
   @protected
@@ -288,10 +721,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JustShareCore sse_decode_just_share_core(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_config = sse_decode_just_share_core_config(deserializer);
+    var var_sender =
+        sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+            deserializer);
+    var var_receiver =
+        sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+            deserializer);
+    var var_listener =
+        sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+            deserializer);
+    return JustShareCore(
+        config: var_config,
+        sender: var_sender,
+        receiver: var_receiver,
+        listener: var_listener);
+  }
+
+  @protected
+  JustShareCoreConfig sse_decode_just_share_core_config(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_port = sse_decode_u_16(deserializer);
+    return JustShareCoreConfig(port: var_port);
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  MutexJustShareCore sse_decode_mutex_just_share_core(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_core =
+        sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+            deserializer);
+    return MutexJustShareCore(core: var_core);
   }
 
   @protected
@@ -303,6 +774,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int sse_decode_u_16(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint16();
+  }
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
@@ -311,6 +788,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  int sse_decode_usize(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint64();
   }
 
   @protected
@@ -326,9 +809,87 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          ArcMutexOptionTokioNetTcpListener self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          ArcMutexReceiverString self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          ArcMutexSenderString self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          StdSyncArcMutexOptionJustShareCore self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+          ArcMutexOptionTokioNetTcpListener self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: null), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+          ArcMutexReceiverString self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: null), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+          ArcMutexSenderString self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: null), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+          StdSyncArcMutexOptionJustShareCore self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.sseEncode(move: null), serializer);
+  }
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_just_share_core_config(
+      JustShareCoreConfig self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_just_share_core_config(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_mutex_just_share_core(
+      MutexJustShareCore self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_mutex_just_share_core(self, serializer);
   }
 
   @protected
@@ -336,6 +897,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SendFile self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_send_file(self, serializer);
+  }
+
+  @protected
+  void sse_encode_just_share_core(
+      JustShareCore self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_just_share_core_config(self.config, serializer);
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
+        self.sender, serializer);
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
+        self.receiver, serializer);
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
+        self.listener, serializer);
+  }
+
+  @protected
+  void sse_encode_just_share_core_config(
+      JustShareCoreConfig self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_16(self.port, serializer);
   }
 
   @protected
@@ -347,10 +928,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_mutex_just_share_core(
+      MutexJustShareCore self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
+        self.core, serializer);
+  }
+
+  @protected
   void sse_encode_send_file(SendFile self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.path, serializer);
     sse_encode_String(self.addr, serializer);
+  }
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint16(self);
   }
 
   @protected
@@ -362,6 +957,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_usize(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint64(self);
   }
 
   @protected

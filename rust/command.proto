@@ -24,3 +24,22 @@ message Resp {
     int32 code = 1;
     string msg = 2;
 }
+
+message UploadFileRequest {
+    oneof uploadFileEnum {
+        FileMetaData MetaData = 1;
+        bytes Content = 2;
+    }
+
+}
+
+message FileMetaData {
+    string FileName = 1;
+    int32 fileSize =2;
+    string md5=3;
+}
+
+
+service ShareFile {
+    rpc UploadFile(stream UploadFileRequest) returns (stream Resp);
+}

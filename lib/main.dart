@@ -2,20 +2,25 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:just_share/src/rust/api/api.dart';
 import 'package:just_share/src/rust/api/command.dart';
-import 'package:just_share/src/rust/api/core/core.dart';
-import 'package:just_share/src/rust/api/simple.dart';
 import 'package:just_share/src/rust/frb_generated.dart';
 
 Future<void> main() async {
   await RustLib.init();
   await initCore();
-  runApp(const MyApp());
+  runApp(const Main());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Main extends StatefulWidget {
+  const Main({Key? key}) : super(key: key);
 
+  @override
+  _MainState createState() => _MainState();
+}
+
+class _MainState extends State<Main> {
+  var name = "adf";
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,9 +29,18 @@ class MyApp extends StatelessWidget {
       body: Center(
           child: Column(
         children: [
-          Text("Hello, ${greet(name: "adf")}!"),
+          Text("Hello, $name !"),
           ElevatedButton(
               onPressed: () async {
+                print(("incore"));
+                // await initCore();
+                final s = handleStream();
+                s.listen((event) {
+                  print("event $event");
+                  setState(() {
+                    name = event;
+                  });
+                });
                 print(("START TO RECEIVE"));
                 await receiveFile();
               },
@@ -49,5 +63,10 @@ class MyApp extends StatelessWidget {
         ],
       )),
     ));
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 }
