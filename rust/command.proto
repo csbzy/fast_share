@@ -3,16 +3,21 @@ syntax = "proto3";
 
 package command;
 
+// command between dart <-> rust
+// 启动rust的服务
 message Start {
 
 }
 
+// 停止rust的服务
 message Stop {
     
 }
 
-message Receive {
-    
+// 
+message RequestToReceive {
+    string file_name=1;
+    string from = 2;
 }
 
 message SendFile {
@@ -25,6 +30,25 @@ message Resp {
     string msg = 2;
 }
 
+// 
+message StartToReceive{
+
+}
+//
+message Event {
+    oneof eventEnum {
+        Start start = 1;
+        Stop stop = 2;
+        RequestToReceive request_to_receive = 3;
+        SendFile send_file = 4;
+        StartToReceive start_receive=5;
+    }
+}
+
+
+
+
+// 上传文件,rust层之间通信
 message UploadFileRequest {
     oneof uploadFileEnum {
         FileMetaData MetaData = 1;

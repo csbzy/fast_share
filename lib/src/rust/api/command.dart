@@ -4,7 +4,49 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'command/event.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
+///
+class Event {
+  final EventEnum? eventEnum;
+
+  const Event({
+    this.eventEnum,
+  });
+
+  @override
+  int get hashCode => eventEnum.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Event &&
+          runtimeType == other.runtimeType &&
+          eventEnum == other.eventEnum;
+}
+
+///
+class RequestToReceive {
+  final String fileName;
+  final String from;
+
+  const RequestToReceive({
+    required this.fileName,
+    required this.from,
+  });
+
+  @override
+  int get hashCode => fileName.hashCode ^ from.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RequestToReceive &&
+          runtimeType == other.runtimeType &&
+          fileName == other.fileName &&
+          from == other.from;
+}
 
 class SendFile {
   final String path;
@@ -25,4 +67,44 @@ class SendFile {
           runtimeType == other.runtimeType &&
           path == other.path &&
           addr == other.addr;
+}
+
+/// command between dart <-> rust
+/// 启动rust的服务
+class Start {
+  const Start();
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Start && runtimeType == other.runtimeType;
+}
+
+///
+class StartToReceive {
+  const StartToReceive();
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StartToReceive && runtimeType == other.runtimeType;
+}
+
+/// 停止rust的服务
+class Stop {
+  const Stop();
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Stop && runtimeType == other.runtimeType;
 }

@@ -5,10 +5,8 @@
 
 import '../frb_generated.dart';
 import 'command.dart';
+import 'command/event.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
-Future<void> initCore({dynamic hint}) =>
-    RustLib.instance.api.initCore(hint: hint);
 
 Future<void> start({dynamic hint}) => RustLib.instance.api.start(hint: hint);
 
@@ -20,5 +18,8 @@ Future<void> sendFile({required SendFile message, dynamic hint}) =>
 Future<void> receiveFile({dynamic hint}) =>
     RustLib.instance.api.receiveFile(hint: hint);
 
-Stream<String> handleStream({dynamic hint}) =>
+Future<void> comfirmReceiveFile({required String name, dynamic hint}) =>
+    RustLib.instance.api.comfirmReceiveFile(name: name, hint: hint);
+
+Stream<Event> handleStream({dynamic hint}) =>
     RustLib.instance.api.handleStream(hint: hint);

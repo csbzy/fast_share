@@ -19,7 +19,6 @@
 
 // Section: imports
 
-use crate::api::core::core::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::transform_result_dco;
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -39,6 +38,41 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire_comfirm_receive_file_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "comfirm_receive_file",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_name = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse(
+                    (move || async move {
+                        Result::<_, ()>::Ok(crate::api::api::comfirm_receive_file(api_name).await)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire_handle_stream_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -67,7 +101,9 @@ fn wire_handle_stream_impl(
                     (move || async move {
                         Result::<_, ()>::Ok(
                             crate::api::api::handle_stream(StreamSink::new(
-                                context.rust2dart_context().stream_sink::<_, String>(),
+                                context
+                                    .rust2dart_context()
+                                    .stream_sink::<_, crate::api::command::Event>(),
                             ))
                             .await,
                         )
@@ -103,37 +139,6 @@ fn wire_init_app_impl(
             deserializer.end();
             move |context| {
                 transform_result_sse((move || Result::<_, ()>::Ok(crate::api::api::init_app()))())
-            }
-        },
-    )
-}
-fn wire_init_core_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "init_core",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse((move || async move {
-                         Result::<_,()>::Ok(crate::api::api::init_core().await)
-                    })().await)
             }
         },
     )
@@ -268,271 +273,8 @@ fn wire_stop_impl(
         },
     )
 }
-fn wire_JustShareCore_new_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "JustShareCore_new",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_config =
-                <crate::api::core::core::JustShareCoreConfig>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse((move || {
-                    Result::<_, ()>::Ok(crate::api::core::core::JustShareCore::new(api_config))
-                })())
-            }
-        },
-    )
-}
-fn wire_MutexJustShareCore_handle_receive_file_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "MutexJustShareCore_handle_receive_file",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_core =
-                <std::sync::Arc<Mutex<Option<JustShareCore>>>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse(
-                    (move || async move {
-                        Result::<_, ()>::Ok(
-                            crate::api::core::core::MutexJustShareCore::handle_receive_file(
-                                api_core,
-                            )
-                            .await,
-                        )
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire_MutexJustShareCore_new_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "MutexJustShareCore_new",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse((move || {
-                    Result::<_, ()>::Ok(crate::api::core::core::MutexJustShareCore::new())
-                })())
-            }
-        },
-    )
-}
-fn wire_MutexJustShareCore_send_file_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "MutexJustShareCore_send_file",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <crate::api::core::core::MutexJustShareCore>::sse_decode(&mut deserializer);
-            let api_message = <crate::api::command::SendFile>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse(
-                    (move || async move {
-                        Result::<_, ()>::Ok(
-                            crate::api::core::core::MutexJustShareCore::send_file(
-                                &api_that,
-                                api_message,
-                            )
-                            .await,
-                        )
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-
-// Section: related_funcs
-
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::rust_async::RwLock<
-        Arc<Mutex<Option<tokio::net::TcpListener>>>,
-    >
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Receiver<String>>>>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Sender<String>>>>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::rust_async::RwLock<
-        std::sync::Arc<Mutex<Option<JustShareCore>>>,
-    >
-);
 
 // Section: dart2rust
-
-impl SseDecode for Arc<Mutex<Option<tokio::net::TcpListener>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<
-                Arc<Mutex<Option<tokio::net::TcpListener>>>,
-            >,
-        >>::sse_decode(deserializer);
-        return inner.rust_auto_opaque_decode_owned();
-    }
-}
-
-impl SseDecode for Arc<Mutex<Receiver<String>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Receiver<String>>>>,
-        >>::sse_decode(deserializer);
-        return inner.rust_auto_opaque_decode_owned();
-    }
-}
-
-impl SseDecode for Arc<Mutex<Sender<String>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Sender<String>>>>,
-        >>::sse_decode(deserializer);
-        return inner.rust_auto_opaque_decode_owned();
-    }
-}
-
-impl SseDecode for std::sync::Arc<Mutex<Option<JustShareCore>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<
-                std::sync::Arc<Mutex<Option<JustShareCore>>>,
-            >,
-        >>::sse_decode(deserializer);
-        return inner.rust_auto_opaque_decode_owned();
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<
-            Arc<Mutex<Option<tokio::net::TcpListener>>>,
-        >,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Receiver<String>>>>,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Sender<String>>>>,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<
-            std::sync::Arc<Mutex<Option<JustShareCore>>>,
-        >,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
 
 impl SseDecode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -542,29 +284,48 @@ impl SseDecode for String {
     }
 }
 
-impl SseDecode for crate::api::core::core::JustShareCore {
+impl SseDecode for crate::api::command::Event {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_config =
-            <crate::api::core::core::JustShareCoreConfig>::sse_decode(deserializer);
-        let mut var_sender = <Arc<Mutex<Sender<String>>>>::sse_decode(deserializer);
-        let mut var_receiver = <Arc<Mutex<Receiver<String>>>>::sse_decode(deserializer);
-        let mut var_listener =
-            <Arc<Mutex<Option<tokio::net::TcpListener>>>>::sse_decode(deserializer);
-        return crate::api::core::core::JustShareCore {
-            config: var_config,
-            sender: var_sender,
-            receiver: var_receiver,
-            listener: var_listener,
+        let mut var_eventEnum =
+            <Option<crate::api::command::event::EventEnum>>::sse_decode(deserializer);
+        return crate::api::command::Event {
+            event_enum: var_eventEnum,
         };
     }
 }
 
-impl SseDecode for crate::api::core::core::JustShareCoreConfig {
+impl SseDecode for crate::api::command::event::EventEnum {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_port = <u16>::sse_decode(deserializer);
-        return crate::api::core::core::JustShareCoreConfig { port: var_port };
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 = <crate::api::command::Start>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::Start(var_field0);
+            }
+            1 => {
+                let mut var_field0 = <crate::api::command::Stop>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::Stop(var_field0);
+            }
+            2 => {
+                let mut var_field0 =
+                    <crate::api::command::RequestToReceive>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::RequestToReceive(var_field0);
+            }
+            3 => {
+                let mut var_field0 = <crate::api::command::SendFile>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::SendFile(var_field0);
+            }
+            4 => {
+                let mut var_field0 =
+                    <crate::api::command::StartToReceive>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::StartReceive(var_field0);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -580,11 +341,28 @@ impl SseDecode for Vec<u8> {
     }
 }
 
-impl SseDecode for crate::api::core::core::MutexJustShareCore {
+impl SseDecode for Option<crate::api::command::event::EventEnum> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_core = <std::sync::Arc<Mutex<Option<JustShareCore>>>>::sse_decode(deserializer);
-        return crate::api::core::core::MutexJustShareCore { core: var_core };
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::command::event::EventEnum>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for crate::api::command::RequestToReceive {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fileName = <String>::sse_decode(deserializer);
+        let mut var_from = <String>::sse_decode(deserializer);
+        return crate::api::command::RequestToReceive {
+            file_name: var_fileName,
+            from: var_from,
+        };
     }
 }
 
@@ -600,10 +378,24 @@ impl SseDecode for crate::api::command::SendFile {
     }
 }
 
-impl SseDecode for u16 {
+impl SseDecode for crate::api::command::Start {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u16::<NativeEndian>().unwrap()
+        return crate::api::command::Start {};
+    }
+}
+
+impl SseDecode for crate::api::command::StartToReceive {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::api::command::StartToReceive {};
+    }
+}
+
+impl SseDecode for crate::api::command::Stop {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::api::command::Stop {};
     }
 }
 
@@ -617,13 +409,6 @@ impl SseDecode for u8 {
 impl SseDecode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
-}
-
-impl SseDecode for usize {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u64::<NativeEndian>().unwrap() as _
-    }
 }
 
 impl SseDecode for i32 {
@@ -649,17 +434,13 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
+        6 => wire_comfirm_receive_file_impl(port, ptr, rust_vec_len, data_len),
         7 => wire_handle_stream_impl(port, ptr, rust_vec_len, data_len),
         1 => wire_init_app_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire_init_core_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire_receive_file_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire_send_file_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire_start_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire_stop_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire_JustShareCore_new_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire_MutexJustShareCore_handle_receive_file_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire_MutexJustShareCore_new_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire_MutexJustShareCore_send_file_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire_receive_file_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire_send_file_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire_start_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire_stop_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -678,120 +459,69 @@ fn pde_ffi_dispatcher_sync_impl(
 
 // Section: rust2dart
 
-pub struct Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(
-    Arc<Mutex<Option<tokio::net::TcpListener>>>,
-);
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener {
-                fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-                    flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0).into_dart()
-                }
+impl flutter_rust_bridge::IntoDart for crate::api::command::Event {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.event_enum.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::command::Event {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::Event> for crate::api::command::Event {
+    fn into_into_dart(self) -> crate::api::command::Event {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::command::event::EventEnum {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::api::command::event::EventEnum::Start(field0) => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener {}
-impl flutter_rust_bridge::IntoIntoDart<Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener> for Arc < Mutex < Option < tokio :: net :: TcpListener > > > {
-            fn into_into_dart(self) -> Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener {
-                Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexOptiontokionetTcpListener(self)
+            crate::api::command::event::EventEnum::Stop(field0) => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::command::event::EventEnum::RequestToReceive(field0) => {
+                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::command::event::EventEnum::SendFile(field0) => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::command::event::EventEnum::StartReceive(field0) => {
+                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
         }
-pub struct Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(
-    Arc<Mutex<Receiver<String>>>,
-);
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::command::event::EventEnum
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::event::EventEnum>
+    for crate::api::command::event::EventEnum
+{
+    fn into_into_dart(self) -> crate::api::command::event::EventEnum {
+        self
+    }
+}
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString {
-                fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-                    flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0).into_dart()
-                }
-            }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString {}
-impl flutter_rust_bridge::IntoIntoDart<Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString> for Arc < Mutex < Receiver < String > > > {
-            fn into_into_dart(self) -> Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString {
-                Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexReceiverString(self)
-            }
-        }
-pub struct Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(
-    Arc<Mutex<Sender<String>>>,
-);
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString {
-                fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-                    flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0).into_dart()
-                }
-            }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString {}
-impl flutter_rust_bridge::IntoIntoDart<Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString> for Arc < Mutex < Sender < String > > > {
-            fn into_into_dart(self) -> Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString {
-                Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockArcMutexSenderString(self)
-            }
-        }
-pub struct Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(
-    std::sync::Arc<Mutex<Option<JustShareCore>>>,
-);
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore {
-                fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-                    flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0).into_dart()
-                }
-            }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore {}
-impl flutter_rust_bridge::IntoIntoDart<Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore> for std :: sync :: Arc < Mutex < Option < JustShareCore > > > {
-            fn into_into_dart(self) -> Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore {
-                Local_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockstdsyncArcMutexOptionJustShareCore(self)
-            }
-        }
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::core::core::JustShareCore {
+impl flutter_rust_bridge::IntoDart for crate::api::command::RequestToReceive {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.config.into_into_dart().into_dart(),
-            self.sender.into_into_dart().into_dart(),
-            self.receiver.into_into_dart().into_dart(),
-            self.listener.into_into_dart().into_dart(),
+            self.file_name.into_into_dart().into_dart(),
+            self.from.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::core::core::JustShareCore
+    for crate::api::command::RequestToReceive
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::core::core::JustShareCore>
-    for crate::api::core::core::JustShareCore
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::RequestToReceive>
+    for crate::api::command::RequestToReceive
 {
-    fn into_into_dart(self) -> crate::api::core::core::JustShareCore {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::core::core::JustShareCoreConfig {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.port.into_into_dart().into_dart()].into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::core::core::JustShareCoreConfig
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::core::core::JustShareCoreConfig>
-    for crate::api::core::core::JustShareCoreConfig
-{
-    fn into_into_dart(self) -> crate::api::core::core::JustShareCoreConfig {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::core::core::MutexJustShareCore {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.core.into_into_dart().into_dart()].into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::core::core::MutexJustShareCore
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::core::core::MutexJustShareCore>
-    for crate::api::core::core::MutexJustShareCore
-{
-    fn into_into_dart(self) -> crate::api::core::core::MutexJustShareCore {
+    fn into_into_dart(self) -> crate::api::command::RequestToReceive {
         self
     }
 }
@@ -813,112 +543,45 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::command::SendFile>
         self
     }
 }
-
-impl SseEncode for Arc<Mutex<Option<tokio::net::TcpListener>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<
-                Arc<Mutex<Option<tokio::net::TcpListener>>>,
-            >,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::command::Start {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
     }
 }
-
-impl SseEncode for Arc<Mutex<Receiver<String>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Receiver<String>>>>,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::command::Start {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::Start> for crate::api::command::Start {
+    fn into_into_dart(self) -> crate::api::command::Start {
+        self
     }
 }
-
-impl SseEncode for Arc<Mutex<Sender<String>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Sender<String>>>>,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::command::StartToReceive {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
     }
 }
-
-impl SseEncode for std::sync::Arc<Mutex<Option<JustShareCore>>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<
-                std::sync::Arc<Mutex<Option<JustShareCore>>>,
-            >,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<
-            Arc<Mutex<Option<tokio::net::TcpListener>>>,
-        >,
-    >
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::command::StartToReceive
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::StartToReceive>
+    for crate::api::command::StartToReceive
+{
+    fn into_into_dart(self) -> crate::api::command::StartToReceive {
+        self
     }
 }
-
-impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Receiver<String>>>>,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::command::Stop {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
     }
 }
-
-impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<Arc<Mutex<Sender<String>>>>,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<
-            std::sync::Arc<Mutex<Option<JustShareCore>>>,
-        >,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::command::Stop {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::Stop> for crate::api::command::Stop {
+    fn into_into_dart(self) -> crate::api::command::Stop {
+        self
     }
 }
 
@@ -929,20 +592,38 @@ impl SseEncode for String {
     }
 }
 
-impl SseEncode for crate::api::core::core::JustShareCore {
+impl SseEncode for crate::api::command::Event {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::api::core::core::JustShareCoreConfig>::sse_encode(self.config, serializer);
-        <Arc<Mutex<Sender<String>>>>::sse_encode(self.sender, serializer);
-        <Arc<Mutex<Receiver<String>>>>::sse_encode(self.receiver, serializer);
-        <Arc<Mutex<Option<tokio::net::TcpListener>>>>::sse_encode(self.listener, serializer);
+        <Option<crate::api::command::event::EventEnum>>::sse_encode(self.event_enum, serializer);
     }
 }
 
-impl SseEncode for crate::api::core::core::JustShareCoreConfig {
+impl SseEncode for crate::api::command::event::EventEnum {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u16>::sse_encode(self.port, serializer);
+        match self {
+            crate::api::command::event::EventEnum::Start(field0) => {
+                <i32>::sse_encode(0, serializer);
+                <crate::api::command::Start>::sse_encode(field0, serializer);
+            }
+            crate::api::command::event::EventEnum::Stop(field0) => {
+                <i32>::sse_encode(1, serializer);
+                <crate::api::command::Stop>::sse_encode(field0, serializer);
+            }
+            crate::api::command::event::EventEnum::RequestToReceive(field0) => {
+                <i32>::sse_encode(2, serializer);
+                <crate::api::command::RequestToReceive>::sse_encode(field0, serializer);
+            }
+            crate::api::command::event::EventEnum::SendFile(field0) => {
+                <i32>::sse_encode(3, serializer);
+                <crate::api::command::SendFile>::sse_encode(field0, serializer);
+            }
+            crate::api::command::event::EventEnum::StartReceive(field0) => {
+                <i32>::sse_encode(4, serializer);
+                <crate::api::command::StartToReceive>::sse_encode(field0, serializer);
+            }
+        }
     }
 }
 
@@ -956,10 +637,21 @@ impl SseEncode for Vec<u8> {
     }
 }
 
-impl SseEncode for crate::api::core::core::MutexJustShareCore {
+impl SseEncode for Option<crate::api::command::event::EventEnum> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <std::sync::Arc<Mutex<Option<JustShareCore>>>>::sse_encode(self.core, serializer);
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::command::event::EventEnum>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::api::command::RequestToReceive {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.file_name, serializer);
+        <String>::sse_encode(self.from, serializer);
     }
 }
 
@@ -971,11 +663,19 @@ impl SseEncode for crate::api::command::SendFile {
     }
 }
 
-impl SseEncode for u16 {
+impl SseEncode for crate::api::command::Start {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u16::<NativeEndian>(self).unwrap();
-    }
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for crate::api::command::StartToReceive {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for crate::api::command::Stop {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
 impl SseEncode for u8 {
@@ -988,16 +688,6 @@ impl SseEncode for u8 {
 impl SseEncode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
-}
-
-impl SseEncode for usize {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer
-            .cursor
-            .write_u64::<NativeEndian>(self as _)
-            .unwrap();
-    }
 }
 
 impl SseEncode for i32 {
@@ -1024,7 +714,5 @@ pub use io::*;
 #[cfg(target_family = "wasm")]
 #[path = "frb_generated.web.rs"]
 mod web;
-use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::sync::Mutex;
 #[cfg(target_family = "wasm")]
 pub use web::*;

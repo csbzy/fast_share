@@ -1,12 +1,21 @@
+/// command between dart <-> rust
+/// 启动rust的服务
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Start {}
+/// 停止rust的服务
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Stop {}
+///
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Receive {}
+pub struct RequestToReceive {
+    #[prost(string, tag = "1")]
+    pub file_name: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub from: ::prost::alloc::string::String,
+}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SendFile {
@@ -23,6 +32,35 @@ pub struct Resp {
     #[prost(string, tag = "2")]
     pub msg: ::prost::alloc::string::String,
 }
+///
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StartToReceive {}
+///
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Event {
+    #[prost(oneof = "event::EventEnum", tags = "1, 2, 3, 4, 5")]
+    pub event_enum: ::core::option::Option<event::EventEnum>,
+}
+/// Nested message and enum types in `Event`.
+pub mod event {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum EventEnum {
+        #[prost(message, tag = "1")]
+        Start(super::Start),
+        #[prost(message, tag = "2")]
+        Stop(super::Stop),
+        #[prost(message, tag = "3")]
+        RequestToReceive(super::RequestToReceive),
+        #[prost(message, tag = "4")]
+        SendFile(super::SendFile),
+        #[prost(message, tag = "5")]
+        StartReceive(super::StartToReceive),
+    }
+}
+/// 上传文件,rust层之间通信
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UploadFileRequest {
