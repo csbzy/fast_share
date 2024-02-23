@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:just_share/src/rust/api/api.dart';
 import 'package:just_share/src/rust/api/command.dart';
-import 'package:just_share/src/rust/api/command/event.dart';
 import 'package:just_share/src/rust/frb_generated.dart';
 
 Future<void> main() async {
@@ -71,31 +70,37 @@ class _MainState extends State<Main> {
   receiveEvent() {
     final s = handleStream();
     s.listen((event) {
-      print("event $event");
-      switch (event.eventEnum.runtimeType) {
-        case EventEnum_RequestToReceive:
-          final request = (event.eventEnum as EventEnum_RequestToReceive).field0;
-          showDialog(
-              context: navigatorKey.currentState!.overlay!.context,
-              builder: (context) {
-                return AlertDialog(
-                  content: Text("${request.from}要发送文件到你,文件名称${request.fileName}"),
-                  actions: [
-                    TextButton(
-                        onPressed: () async {
-                          await comfirmReceiveFile(name: request.fileName);
-                          Navigator.pop(context);
-                        },
-                        child: const Text("接收")),
-                    TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text("取消")),
-                  ],
-                );
-              });
-      }
+      print("event ${event.eventEnum!.field0}");
+      event.eventEnum?.when(
+          start: (_) {},
+          stop: (_) {},
+          requestToReceive: (request) {
+            print("enter request to receive");
+            showDialog(
+                context: navigatorKey.currentState!.overlay!.context,
+                builder: (context) {
+                  return AlertDialog(
+                    content: Text("${request.from}要发送文件到你,文件名称${request.fileName}"),
+                    actions: [
+                      TextButton(
+                          onPressed: () async {
+                            await comfirmReceiveFile(name: request.fileName);
+                            Navigator.pop(context);
+                          },
+                          child: const Text("接收")),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("取消")),
+                    ],
+                  );
+                });
+          },
+          sendFile: (_) {},
+          startReceive: (_) {});
+
+      print("END RECEIVE event $event");
     });
   }
 }

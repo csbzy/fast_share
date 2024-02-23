@@ -89,7 +89,7 @@ impl MutexJustShareCore {
         let core_lock = core_clone.lock().await;
         error!("do_receive_file upload file get lock");
 
-        core_lock.do_receive_file(stream, tx, from).await;
+        core_lock.do_receive_file(stream, tx, from).await
     }
 
     pub async fn async_event_to_frontend(&self, sink: StreamSink<Event>) {
@@ -234,7 +234,7 @@ impl JustShareCore {
         mut stream: Streaming<UploadFileRequest>,
         tx: Sender<Result<Resp, Status>>,
         from: String,
-    ) {
+    ) -> Result<(), Box<dyn std::error::Error>>{
         error!("just share core do to receive upload file");
 
         let frontend_channel = self.frontend_channel_sender.clone();
@@ -277,10 +277,12 @@ impl JustShareCore {
                         error!("receive confirm response{:?}", s);
 
                         // Process file metadata
+                        // TODO: change file path prefix
                         file_path =
                             format!("/home/bobo/workspace/just_share/{}", metadata.file_name);
                         error!("start to create file: {:?}", file_path);
                         file = Some(tokio::fs::File::create(&file_path).await.map_err(|e| {
+                            error!("create file error: {:?}", e);
                             Status::internal(format!("Failed to create file: {}", e))
                         })?);
 
@@ -332,8 +334,8 @@ impl ShareFile for MyShareFileServer {
         let stream: Streaming<UploadFileRequest> = req.into_inner();
         let (tx, rx) = mpsc::channel(10);
         error!("start to receive upload file");
-
-        JUSTSHARE_CORE
+        //TODO handle error
+        let res =JUSTSHARE_CORE
             .do_receive_file(stream, tx, from.to_string())
             .await;
 
