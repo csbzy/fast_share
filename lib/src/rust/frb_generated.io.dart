@@ -24,6 +24,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  DiscoveryIp dco_decode_box_autoadd_discovery_ip(dynamic raw);
+
+  @protected
   EventEnum dco_decode_box_autoadd_event_enum(dynamic raw);
 
   @protected
@@ -40,6 +43,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Stop dco_decode_box_autoadd_stop(dynamic raw);
+
+  @protected
+  DiscoveryIp dco_decode_discovery_ip(dynamic raw);
 
   @protected
   Event dco_decode_event(dynamic raw);
@@ -78,6 +84,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  DiscoveryIp sse_decode_box_autoadd_discovery_ip(SseDeserializer deserializer);
+
+  @protected
   EventEnum sse_decode_box_autoadd_event_enum(SseDeserializer deserializer);
 
   @protected
@@ -96,6 +105,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Stop sse_decode_box_autoadd_stop(SseDeserializer deserializer);
+
+  @protected
+  DiscoveryIp sse_decode_discovery_ip(SseDeserializer deserializer);
 
   @protected
   Event sse_decode_event(SseDeserializer deserializer);
@@ -141,6 +153,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_discovery_ip(
+      DiscoveryIp self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_event_enum(
       EventEnum self, SseSerializer serializer);
 
@@ -161,6 +177,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_stop(Stop self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_discovery_ip(DiscoveryIp self, SseSerializer serializer);
 
   @protected
   void sse_encode_event(Event self, SseSerializer serializer);

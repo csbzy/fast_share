@@ -73,47 +73,6 @@ fn wire_comfirm_receive_file_impl(
         },
     )
 }
-fn wire_handle_stream_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "handle_stream",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Stream,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse(
-                    (move || async move {
-                        Result::<_, ()>::Ok(
-                            crate::api::api::handle_stream(StreamSink::new(
-                                context
-                                    .rust2dart_context()
-                                    .stream_sink::<_, crate::api::command::Event>(),
-                            ))
-                            .await,
-                        )
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
 fn wire_init_app_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -143,7 +102,7 @@ fn wire_init_app_impl(
         },
     )
 }
-fn wire_receive_file_impl(
+fn wire_init_core_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -151,7 +110,48 @@ fn wire_receive_file_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "receive_file",
+            debug_name: "init_core",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Stream,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse(
+                    (move || async move {
+                        Result::<_, ()>::Ok(
+                            crate::api::api::init_core(StreamSink::new(
+                                context
+                                    .rust2dart_context()
+                                    .stream_sink::<_, crate::api::command::Event>(),
+                            ))
+                            .await,
+                        )
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire_refresh_discovery_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "refresh_discovery",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -167,9 +167,12 @@ fn wire_receive_file_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| async move {
-                transform_result_sse((move || async move {
-                         Result::<_,()>::Ok(crate::api::api::receive_file().await)
-                    })().await)
+                transform_result_sse(
+                    (move || async move {
+                        Result::<_, ()>::Ok(crate::api::api::refresh_discovery().await)
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -204,38 +207,6 @@ fn wire_send_file_impl(
                         Result::<_, ()>::Ok(crate::api::api::send_file(api_message).await)
                     })()
                     .await,
-                )
-            }
-        },
-    )
-}
-fn wire_start_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "start",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse(
-                    (move || async move { Result::<_, ()>::Ok(crate::api::api::start().await) })()
-                        .await,
                 )
             }
         },
@@ -284,6 +255,14 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for crate::api::command::DiscoveryIp {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_addr = <String>::sse_decode(deserializer);
+        return crate::api::command::DiscoveryIp { addr: var_addr };
+    }
+}
+
 impl SseDecode for crate::api::command::Event {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -321,6 +300,10 @@ impl SseDecode for crate::api::command::event::EventEnum {
                 let mut var_field0 =
                     <crate::api::command::StartToReceive>::sse_decode(deserializer);
                 return crate::api::command::event::EventEnum::StartReceive(var_field0);
+            }
+            5 => {
+                let mut var_field0 = <crate::api::command::DiscoveryIp>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::DiscoveryIp(var_field0);
             }
             _ => {
                 unimplemented!("");
@@ -434,13 +417,12 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        6 => wire_comfirm_receive_file_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire_handle_stream_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire_comfirm_receive_file_impl(port, ptr, rust_vec_len, data_len),
         1 => wire_init_app_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire_receive_file_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire_send_file_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire_start_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire_stop_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire_init_core_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire_refresh_discovery_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire_send_file_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire_stop_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -459,6 +441,23 @@ fn pde_ffi_dispatcher_sync_impl(
 
 // Section: rust2dart
 
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::command::DiscoveryIp {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.addr.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::command::DiscoveryIp
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::DiscoveryIp>
+    for crate::api::command::DiscoveryIp
+{
+    fn into_into_dart(self) -> crate::api::command::DiscoveryIp {
+        self
+    }
+}
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::command::Event {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
@@ -489,6 +488,9 @@ impl flutter_rust_bridge::IntoDart for crate::api::command::event::EventEnum {
             }
             crate::api::command::event::EventEnum::StartReceive(field0) => {
                 [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::command::event::EventEnum::DiscoveryIp(field0) => {
+                [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
         }
     }
@@ -592,6 +594,13 @@ impl SseEncode for String {
     }
 }
 
+impl SseEncode for crate::api::command::DiscoveryIp {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.addr, serializer);
+    }
+}
+
 impl SseEncode for crate::api::command::Event {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -622,6 +631,10 @@ impl SseEncode for crate::api::command::event::EventEnum {
             crate::api::command::event::EventEnum::StartReceive(field0) => {
                 <i32>::sse_encode(4, serializer);
                 <crate::api::command::StartToReceive>::sse_encode(field0, serializer);
+            }
+            crate::api::command::event::EventEnum::DiscoveryIp(field0) => {
+                <i32>::sse_encode(5, serializer);
+                <crate::api::command::DiscoveryIp>::sse_encode(field0, serializer);
             }
         }
     }

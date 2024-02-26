@@ -26,4 +26,7 @@ sealed class EventEnum with _$EventEnum {
   const factory EventEnum.startReceive(
     StartToReceive field0,
   ) = EventEnum_StartReceive;
+  const factory EventEnum.discoveryIp(
+    DiscoveryIp field0,
+  ) = EventEnum_DiscoveryIp;
 }

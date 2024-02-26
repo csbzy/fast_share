@@ -7,6 +7,24 @@ import '../frb_generated.dart';
 import 'command/event.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+class DiscoveryIp {
+  final String addr;
+
+  const DiscoveryIp({
+    required this.addr,
+  });
+
+  @override
+  int get hashCode => addr.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DiscoveryIp &&
+          runtimeType == other.runtimeType &&
+          addr == other.addr;
+}
+
 ///
 class Event {
   final EventEnum? eventEnum;

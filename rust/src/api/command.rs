@@ -40,7 +40,7 @@ pub struct StartToReceive {}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Event {
-    #[prost(oneof = "event::EventEnum", tags = "1, 2, 3, 4, 5")]
+    #[prost(oneof = "event::EventEnum", tags = "1, 2, 3, 4, 5, 6")]
     pub event_enum: ::core::option::Option<event::EventEnum>,
 }
 /// Nested message and enum types in `Event`.
@@ -58,13 +58,21 @@ pub mod event {
         SendFile(super::SendFile),
         #[prost(message, tag = "5")]
         StartReceive(super::StartToReceive),
+        #[prost(message, tag = "6")]
+        DiscoveryIp(super::DiscoveryIp),
     }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DiscoveryIp {
+    #[prost(string, tag = "1")]
+    pub addr: ::prost::alloc::string::String,
 }
 /// 上传文件,rust层之间通信
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UploadFileRequest {
-    #[prost(oneof = "upload_file_request::UploadFileEnum", tags = "1, 2")]
+    #[prost(oneof = "upload_file_request::UploadFileEnum", tags = "1, 2, 3")]
     pub upload_file_enum: ::core::option::Option<upload_file_request::UploadFileEnum>,
 }
 /// Nested message and enum types in `UploadFileRequest`.
@@ -76,8 +84,33 @@ pub mod upload_file_request {
         MetaData(super::FileMetaData),
         #[prost(bytes, tag = "2")]
         Content(::prost::alloc::vec::Vec<u8>),
+        #[prost(message, tag = "3")]
+        Finish(super::Finish),
     }
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UploadFileResp {
+    #[prost(oneof = "upload_file_resp::UploadFileRespEnum", tags = "4")]
+    pub upload_file_resp_enum: ::core::option::Option<
+        upload_file_resp::UploadFileRespEnum,
+    >,
+}
+/// Nested message and enum types in `UploadFileResp`.
+pub mod upload_file_resp {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum UploadFileRespEnum {
+        #[prost(message, tag = "4")]
+        AcceptFile(super::AcceptFile),
+    }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AcceptFile {}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Finish {}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FileMetaData {
@@ -177,7 +210,7 @@ pub mod share_file_client {
             &mut self,
             request: impl tonic::IntoStreamingRequest<Message = super::UploadFileRequest>,
         ) -> std::result::Result<
-            tonic::Response<tonic::codec::Streaming<super::Resp>>,
+            tonic::Response<tonic::codec::Streaming<super::UploadFileResp>>,
             tonic::Status,
         > {
             self.inner
@@ -209,7 +242,7 @@ pub mod share_file_server {
     pub trait ShareFile: Send + Sync + 'static {
         /// Server streaming response type for the UploadFile method.
         type UploadFileStream: tonic::codegen::tokio_stream::Stream<
-                Item = std::result::Result<super::Resp, tonic::Status>,
+                Item = std::result::Result<super::UploadFileResp, tonic::Status>,
             >
             + Send
             + 'static;
@@ -304,7 +337,7 @@ pub mod share_file_server {
                         T: ShareFile,
                     > tonic::server::StreamingService<super::UploadFileRequest>
                     for UploadFileSvc<T> {
-                        type Response = super::Resp;
+                        type Response = super::UploadFileResp;
                         type ResponseStream = T::UploadFileStream;
                         type Future = BoxFuture<
                             tonic::Response<Self::ResponseStream>,

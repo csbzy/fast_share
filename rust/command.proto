@@ -42,7 +42,12 @@ message Event {
         RequestToReceive request_to_receive = 3;
         SendFile send_file = 4;
         StartToReceive start_receive=5;
+        DiscoveryIP discovery_ip = 6;
     }
+}
+
+message DiscoveryIP {
+    string addr = 1;
 }
 
 
@@ -53,7 +58,22 @@ message UploadFileRequest {
     oneof uploadFileEnum {
         FileMetaData MetaData = 1;
         bytes Content = 2;
+        Finish finish = 3;
     }
+
+}
+
+message UploadFileResp {
+    oneof uploadFileRespEnum {
+        AcceptFile accept_file = 4;
+    }
+}
+
+message AcceptFile {
+
+}
+
+message Finish {
 
 }
 
@@ -65,5 +85,5 @@ message FileMetaData {
 
 
 service ShareFile {
-    rpc UploadFile(stream UploadFileRequest) returns (stream Resp);
+    rpc UploadFile(stream UploadFileRequest) returns (stream UploadFileResp);
 }

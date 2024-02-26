@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -8,7 +10,6 @@ import 'package:just_share/src/rust/frb_generated.dart';
 
 Future<void> main() async {
   await RustLib.init();
-  await start();
   runApp(const Main());
 }
 
@@ -22,7 +23,9 @@ class Main extends StatefulWidget {
 }
 
 class _MainState extends State<Main> {
-  var name = "adf";
+  var name = "等待";
+  var discoverList = <String>[];
+  var selectAddr = "";
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -31,31 +34,57 @@ class _MainState extends State<Main> {
           appBar: AppBar(title: const Text('flutter_rust_bridge quickstart')),
           body: Center(
               child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Hello, $name !"),
+              Text("现在是:$name 状态"),
+              Expanded(
+                  child: ListView.builder(
+                itemCount: discoverList.length,
+                itemBuilder: (context, index) {
+                  return Center(
+                      child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectAddr = discoverList[index];
+                            });
+                          },
+                          child: ListTile(
+                            title: Text(discoverList[index]),
+                            selected: selectAddr == discoverList[index],
+                          )));
+                },
+              )),
               ElevatedButton(
                   onPressed: () async {
-                    print(("incore"));
-                    // await initCore();
-                    print(("START TO RECEIVE"));
-                    await receiveFile();
-                  },
-                  child: const Text("我要接收")),
-              ElevatedButton(
-                  onPressed: () async {
+                    if (selectAddr == "") {
+                      print("请选择则接收addr");
+                      return;
+                    }
+                    setState(() {
+                      name = "发送状态";
+                    });
                     FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
 
                     if (result != null) {
                       List<File> files = result.paths.map((path) => File(path!)).toList();
                       for (File file in files) {
                         print("send $file");
-                        await sendFile(message: SendFile(path: file.path, addr: "localhost:8965"));
+                        String ipAddress = selectAddr.split(':')[0];
+                        await sendFile(message: SendFile(path: file.path, addr: "$ipAddress:8965"));
                       }
                     } else {
                       // User canceled the picker
                     }
                   },
-                  child: const Text("我要发送"))
+                  child: const Text("我要发送")),
+              ElevatedButton(
+                  onPressed: () async {
+                    setState(() {
+                      discoverList = [];
+                    });
+                    await refreshDiscovery();
+                  },
+                  child: const Text("发现新的ip")),
             ],
           )),
         ));
@@ -68,7 +97,7 @@ class _MainState extends State<Main> {
   }
 
   receiveEvent() {
-    final s = handleStream();
+    final s = initCore();
     s.listen((event) {
       print("event ${event.eventEnum!.field0}");
       event.eventEnum?.when(
@@ -84,6 +113,7 @@ class _MainState extends State<Main> {
                     actions: [
                       TextButton(
                           onPressed: () async {
+                            print("comfirmReceiveFile ${request.fileName}");
                             await comfirmReceiveFile(name: request.fileName);
                             Navigator.pop(context);
                           },
@@ -96,6 +126,11 @@ class _MainState extends State<Main> {
                     ],
                   );
                 });
+          },
+          discoveryIp: (field0) {
+            setState(() {
+              discoverList.add(field0.addr);
+            });
           },
           sendFile: (_) {},
           startReceive: (_) {});

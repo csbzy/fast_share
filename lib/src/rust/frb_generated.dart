@@ -68,15 +68,13 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 abstract class RustLibApi extends BaseApi {
   Future<void> comfirmReceiveFile({required String name, dynamic hint});
 
-  Stream<Event> handleStream({dynamic hint});
-
   Future<void> initApp({dynamic hint});
 
-  Future<void> receiveFile({dynamic hint});
+  Stream<Event> initCore({dynamic hint});
+
+  Future<void> refreshDiscovery({dynamic hint});
 
   Future<void> sendFile({required SendFile message, dynamic hint});
-
-  Future<void> start({dynamic hint});
 
   Future<void> stop({dynamic hint});
 }
@@ -96,7 +94,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(name, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
+            funcId: 4, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -112,30 +110,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kComfirmReceiveFileConstMeta => const TaskConstMeta(
         debugName: "comfirm_receive_file",
         argNames: ["name"],
-      );
-
-  @override
-  Stream<Event> handleStream({dynamic hint}) {
-    return handler.executeStream(StreamTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_event,
-        decodeErrorData: null,
-      ),
-      constMeta: kHandleStreamConstMeta,
-      argValues: [],
-      apiImpl: this,
-      hint: hint,
-    ));
-  }
-
-  TaskConstMeta get kHandleStreamConstMeta => const TaskConstMeta(
-        debugName: "handle_stream",
-        argNames: [],
       );
 
   @override
@@ -163,7 +137,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> receiveFile({dynamic hint}) {
+  Stream<Event> initCore({dynamic hint}) {
+    return handler.executeStream(StreamTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 6, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_event,
+        decodeErrorData: null,
+      ),
+      constMeta: kInitCoreConstMeta,
+      argValues: [],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kInitCoreConstMeta => const TaskConstMeta(
+        debugName: "init_core",
+        argNames: [],
+      );
+
+  @override
+  Future<void> refreshDiscovery({dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -174,15 +172,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: null,
       ),
-      constMeta: kReceiveFileConstMeta,
+      constMeta: kRefreshDiscoveryConstMeta,
       argValues: [],
       apiImpl: this,
       hint: hint,
     ));
   }
 
-  TaskConstMeta get kReceiveFileConstMeta => const TaskConstMeta(
-        debugName: "receive_file",
+  TaskConstMeta get kRefreshDiscoveryConstMeta => const TaskConstMeta(
+        debugName: "refresh_discovery",
         argNames: [],
       );
 
@@ -193,7 +191,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_box_autoadd_send_file(message, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
+            funcId: 3, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -212,36 +210,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> start({dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 2, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: null,
-      ),
-      constMeta: kStartConstMeta,
-      argValues: [],
-      apiImpl: this,
-      hint: hint,
-    ));
-  }
-
-  TaskConstMeta get kStartConstMeta => const TaskConstMeta(
-        debugName: "start",
-        argNames: [],
-      );
-
-  @override
   Future<void> stop({dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
+            funcId: 2, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -263,6 +237,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  DiscoveryIp dco_decode_box_autoadd_discovery_ip(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_discovery_ip(raw);
   }
 
   @protected
@@ -302,6 +282,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DiscoveryIp dco_decode_discovery_ip(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return DiscoveryIp(
+      addr: dco_decode_String(arr[0]),
+    );
+  }
+
+  @protected
   Event dco_decode_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -335,6 +326,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 4:
         return EventEnum_StartReceive(
           dco_decode_box_autoadd_start_to_receive(raw[1]),
+        );
+      case 5:
+        return EventEnum_DiscoveryIp(
+          dco_decode_box_autoadd_discovery_ip(raw[1]),
         );
       default:
         throw Exception("unreachable");
@@ -424,6 +419,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DiscoveryIp sse_decode_box_autoadd_discovery_ip(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_discovery_ip(deserializer));
+  }
+
+  @protected
   EventEnum sse_decode_box_autoadd_event_enum(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_event_enum(deserializer));
@@ -462,6 +464,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DiscoveryIp sse_decode_discovery_ip(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_addr = sse_decode_String(deserializer);
+    return DiscoveryIp(addr: var_addr);
+  }
+
+  @protected
   Event sse_decode_event(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_eventEnum = sse_decode_opt_box_autoadd_event_enum(deserializer);
@@ -490,6 +499,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 4:
         var var_field0 = sse_decode_box_autoadd_start_to_receive(deserializer);
         return EventEnum_StartReceive(var_field0);
+      case 5:
+        var var_field0 = sse_decode_box_autoadd_discovery_ip(deserializer);
+        return EventEnum_DiscoveryIp(var_field0);
       default:
         throw UnimplementedError('');
     }
@@ -578,6 +590,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_discovery_ip(
+      DiscoveryIp self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_discovery_ip(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_event_enum(
       EventEnum self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -618,6 +637,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_discovery_ip(DiscoveryIp self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.addr, serializer);
+  }
+
+  @protected
   void sse_encode_event(Event self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_box_autoadd_event_enum(self.eventEnum, serializer);
@@ -642,6 +667,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case EventEnum_StartReceive(field0: final field0):
         sse_encode_i_32(4, serializer);
         sse_encode_box_autoadd_start_to_receive(field0, serializer);
+      case EventEnum_DiscoveryIp(field0: final field0):
+        sse_encode_i_32(5, serializer);
+        sse_encode_box_autoadd_discovery_ip(field0, serializer);
     }
   }
 
