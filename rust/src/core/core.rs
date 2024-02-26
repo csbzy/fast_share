@@ -1,6 +1,4 @@
-use crate::api::command::{
-    event, upload_file_resp, AcceptFile, Finish, RequestToReceive, UploadFileResp,
-};
+use crate::api::command::*;
 use crate::api::command::{
     share_file_client::ShareFileClient, share_file_server::*, upload_file_request, FileMetaData,
     Resp, SendFile, UploadFileRequest,
@@ -393,8 +391,6 @@ impl JustShareCore {
                 tokio::select! {
                     Ok((number_of_bytes,src_addr))=socket.recv_from(&mut buf)=>{
                         error!("Received {} bytes from {:?}", number_of_bytes, src_addr);
-                        let message = String::from_utf8_lossy(&buf[..number_of_bytes]);
-                        error!("Message: {}", message);
                         let src_ip = src_addr.ip();
                         error!("srcip: {:?} local_ip: {:?}", src_ip,local_ip);
                         if src_ip == local_ip{
@@ -402,8 +398,26 @@ impl JustShareCore {
                             continue
                         }
 
-                        if message == "discovery" {
-                            socket.send_to("hello".as_bytes(), src_addr).await.expect("Failed to send");
+                        let message = String::from_utf8_lossy(&buf[..number_of_bytes]);
+                        error!("Message: {}", message);
+                        let message = prost::Message::decode(&buf[..number_of_bytes]).unwrap();
+                        let src_ip = src_addr.ip();
+                        match message {
+                            DiscoveryReq {  } => {
+                                // error!("discovery ip: {:?}", addr);
+                                let resp =DiscoveryResp{
+                                                addr: local_addr.to_string(),
+                                                hostname:
+                                            },
+                                let mut buf = vec![];
+                                resp.encode(&mut buf).unwrap();
+                                let res = socket.send_to(&buf, src_addr).await;
+                                error!("send hello res: {:?}", res);
+                            }
+
+                            DiscoveryResp { hostname: "" } => {
+                                error!("discovery ip: {:?}", addr);
+                            }
                         }
 
                         error!("wait for db lock");
@@ -437,9 +451,11 @@ impl JustShareCore {
                         let mut db = db.lock().await;
                         db.clear();
                                     // Send a discovery message
-                        let discovery_message = b"discovery";
+                        let discovery_message = DiscoveryReq{};
+                        let mut buf = vec![];
+                        discovery_message.encode(&mut buf).unwrap();
                         let result = socket
-                            .send_to(discovery_message, "255.255.255.255:9999")
+                            .send_to(&buf, "255.255.255.255:9999")
                             .await;
                         error!("discovery result: {:?}", result);
                     }

@@ -68,6 +68,16 @@ pub struct DiscoveryIp {
     #[prost(string, tag = "1")]
     pub addr: ::prost::alloc::string::String,
 }
+/// UDP Discovery
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DiscoveryReq {}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DiscoveryResp {
+    #[prost(string, tag = "1")]
+    pub hostname: ::prost::alloc::string::String,
+}
 /// 上传文件,rust层之间通信
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

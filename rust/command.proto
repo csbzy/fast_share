@@ -51,7 +51,14 @@ message DiscoveryIP {
 }
 
 
+// UDP Discovery
+message DiscoveryReq {
 
+}
+
+message DiscoveryResp {
+    string hostname=1;
+}
 
 // 上传文件,rust层之间通信
 message UploadFileRequest {

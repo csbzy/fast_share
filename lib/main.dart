@@ -26,6 +26,8 @@ class _MainState extends State<Main> {
   var name = "等待";
   var discoverList = <String>[];
   var selectAddr = "";
+  final hostname = Platform.localHostname; // returns hostname as string
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,7 +38,7 @@ class _MainState extends State<Main> {
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("现在是:$name 状态"),
+              Text("主机名 $hostname 现在是:$name 状态"),
               Expanded(
                   child: ListView.builder(
                 itemCount: discoverList.length,
