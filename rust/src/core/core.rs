@@ -408,7 +408,7 @@ impl JustShareCore {
 
                         error!("wait for db lock");
                         let mut db = db.lock().await;
-                        error!("wait for db lock ok ");
+                        error!("wait for db lock ");
 
                         if let Some(_ip) = db.get(&src_ip.to_string()) {
                             error!("had receive from ip: {}", _ip);
