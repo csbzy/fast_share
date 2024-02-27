@@ -17,15 +17,15 @@ pub async fn send_file(message: SendFile) {
     JUSTSHARE_CORE.send_file(message).await;
 }
 
-pub async fn comfirm_receive_file(name: String) {
-    JUSTSHARE_CORE.comfirm_receive_file(name).await;
+pub async fn comfirm_receive_file(accept: bool, file: String) {
+    JUSTSHARE_CORE.comfirm_receive_file(accept, file).await;
 }
 
 pub async fn refresh_discovery() {
     JUSTSHARE_CORE.refresh_discovery().await;
 }
 
-pub async fn init_core(sink: StreamSink<Event>) {
+pub async fn init_core(sink: StreamSink<Event>, hostname: String, directory: String) {
     INIT.call_once(|| {
         error!("init justshare core");
 
@@ -44,10 +44,10 @@ pub async fn init_core(sink: StreamSink<Event>) {
         env_logger::init();
 
         flutter_rust_bridge::spawn(async move {
+            JUSTSHARE_CORE.init_core(hostname, directory).await;
             JUSTSHARE_CORE.async_event_to_frontend(sink).await;
             JUSTSHARE_CORE.start_receive_file().await;
             error!("start discovery addr");
-
             JUSTSHARE_CORE.discovery().await;
         });
     });

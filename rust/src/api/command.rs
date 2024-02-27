@@ -15,12 +15,14 @@ pub struct RequestToReceive {
     pub file_name: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub from: ::prost::alloc::string::String,
+    #[prost(int32, tag = "3")]
+    pub file_num: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SendFile {
-    #[prost(string, tag = "1")]
-    pub path: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "1")]
+    pub path: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     #[prost(string, tag = "2")]
     pub addr: ::prost::alloc::string::String,
 }
@@ -67,22 +69,46 @@ pub mod event {
 pub struct DiscoveryIp {
     #[prost(string, tag = "1")]
     pub addr: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub hostname: ::prost::alloc::string::String,
 }
 /// UDP Discovery
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct DiscoveryReq {}
+pub struct DiscoveryEvent {
+    #[prost(oneof = "discovery_event::DiscoveryEventEnum", tags = "1, 2")]
+    pub discovery_event_enum: ::core::option::Option<
+        discovery_event::DiscoveryEventEnum,
+    >,
+}
+/// Nested message and enum types in `DiscoveryEvent`.
+pub mod discovery_event {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum DiscoveryEventEnum {
+        #[prost(message, tag = "1")]
+        DiscoveryReq(super::DiscoveryReq),
+        #[prost(message, tag = "2")]
+        DiscoveryResp(super::DiscoveryResp),
+    }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DiscoveryReq {
+    #[prost(string, tag = "1")]
+    pub self_hostname: ::prost::alloc::string::String,
+}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DiscoveryResp {
     #[prost(string, tag = "1")]
-    pub hostname: ::prost::alloc::string::String,
+    pub self_hostname: ::prost::alloc::string::String,
 }
 /// 上传文件,rust层之间通信
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UploadFileRequest {
-    #[prost(oneof = "upload_file_request::UploadFileEnum", tags = "1, 2, 3")]
+    #[prost(oneof = "upload_file_request::UploadFileEnum", tags = "2, 3, 4")]
     pub upload_file_enum: ::core::option::Option<upload_file_request::UploadFileEnum>,
 }
 /// Nested message and enum types in `UploadFileRequest`.
@@ -90,34 +116,31 @@ pub mod upload_file_request {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum UploadFileEnum {
-        #[prost(message, tag = "1")]
+        #[prost(message, tag = "2")]
         MetaData(super::FileMetaData),
-        #[prost(bytes, tag = "2")]
+        #[prost(bytes, tag = "3")]
         Content(::prost::alloc::vec::Vec<u8>),
-        #[prost(message, tag = "3")]
+        #[prost(message, tag = "4")]
         Finish(super::Finish),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UploadFileResp {
-    #[prost(oneof = "upload_file_resp::UploadFileRespEnum", tags = "4")]
-    pub upload_file_resp_enum: ::core::option::Option<
-        upload_file_resp::UploadFileRespEnum,
-    >,
-}
-/// Nested message and enum types in `UploadFileResp`.
-pub mod upload_file_resp {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum UploadFileRespEnum {
-        #[prost(message, tag = "4")]
-        AcceptFile(super::AcceptFile),
-    }
+pub struct RequestAcceptFileReq {
+    #[prost(string, tag = "1")]
+    pub first_file_name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "2")]
+    pub file_num: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct AcceptFile {}
+pub struct RequestAcceptFileResp {
+    #[prost(bool, tag = "1")]
+    pub accept: bool,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UploadFileResp {}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Finish {}
@@ -216,6 +239,31 @@ pub mod share_file_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        pub async fn request_accept_file(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RequestAcceptFileReq>,
+        ) -> std::result::Result<
+            tonic::Response<super::RequestAcceptFileResp>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/command.ShareFile/RequestAcceptFile",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("command.ShareFile", "RequestAcceptFile"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn upload_file(
             &mut self,
             request: impl tonic::IntoStreamingRequest<Message = super::UploadFileRequest>,
@@ -250,6 +298,13 @@ pub mod share_file_server {
     /// Generated trait containing gRPC methods that should be implemented for use with ShareFileServer.
     #[async_trait]
     pub trait ShareFile: Send + Sync + 'static {
+        async fn request_accept_file(
+            &self,
+            request: tonic::Request<super::RequestAcceptFileReq>,
+        ) -> std::result::Result<
+            tonic::Response<super::RequestAcceptFileResp>,
+            tonic::Status,
+        >;
         /// Server streaming response type for the UploadFile method.
         type UploadFileStream: tonic::codegen::tokio_stream::Stream<
                 Item = std::result::Result<super::UploadFileResp, tonic::Status>,
@@ -340,6 +395,52 @@ pub mod share_file_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
+                "/command.ShareFile/RequestAcceptFile" => {
+                    #[allow(non_camel_case_types)]
+                    struct RequestAcceptFileSvc<T: ShareFile>(pub Arc<T>);
+                    impl<
+                        T: ShareFile,
+                    > tonic::server::UnaryService<super::RequestAcceptFileReq>
+                    for RequestAcceptFileSvc<T> {
+                        type Response = super::RequestAcceptFileResp;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::RequestAcceptFileReq>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as ShareFile>::request_accept_file(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = RequestAcceptFileSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 "/command.ShareFile/UploadFile" => {
                     #[allow(non_camel_case_types)]
                     struct UploadFileSvc<T: ShareFile>(pub Arc<T>);

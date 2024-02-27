@@ -2,14 +2,17 @@
 
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:just_share/src/rust/api/api.dart';
 import 'package:just_share/src/rust/api/command.dart';
 import 'package:just_share/src/rust/frb_generated.dart';
+import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
   await RustLib.init();
+
   runApp(const Main());
 }
 
@@ -23,10 +26,11 @@ class Main extends StatefulWidget {
 }
 
 class _MainState extends State<Main> {
-  var name = "等待";
-  var discoverList = <String>[];
-  var selectAddr = "";
-  final hostname = Platform.localHostname; // returns hostname as string
+  var state = "等待";
+  var discoverList = <DiscoveryIp>[];
+  var selectedIndex = -1;
+  Map<String, dynamic> deviceMeta = {};
+  var hostname = "";
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,7 @@ class _MainState extends State<Main> {
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("主机名 $hostname 现在是:$name 状态"),
+              Text("主机名 $hostname 现在是:$state 状态"),
               Expanded(
                   child: ListView.builder(
                 itemCount: discoverList.length,
@@ -47,33 +51,31 @@ class _MainState extends State<Main> {
                       child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              selectAddr = discoverList[index];
+                              selectedIndex = index;
                             });
                           },
                           child: ListTile(
-                            title: Text(discoverList[index]),
-                            selected: selectAddr == discoverList[index],
+                            title: Text(discoverList[index].hostname),
+                            selected: selectedIndex == index,
                           )));
                 },
               )),
               ElevatedButton(
                   onPressed: () async {
-                    if (selectAddr == "") {
+                    if (selectedIndex == "") {
                       print("请选择则接收addr");
                       return;
                     }
                     setState(() {
-                      name = "发送状态";
+                      state = "发送状态";
                     });
                     FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
 
                     if (result != null) {
                       List<File> files = result.paths.map((path) => File(path!)).toList();
-                      for (File file in files) {
-                        print("send $file");
-                        String ipAddress = selectAddr.split(':')[0];
-                        await sendFile(message: SendFile(path: file.path, addr: "$ipAddress:8965"));
-                      }
+                      final filePaths = files.map((file) => file.path).toList();
+                      String ipAddress = discoverList[selectedIndex].addr.split(':')[0];
+                      await sendFile(message: SendFile(path: filePaths, addr: "$ipAddress:8965"));
                     } else {
                       // User canceled the picker
                     }
@@ -92,52 +94,82 @@ class _MainState extends State<Main> {
         ));
   }
 
+  Future<String> getDeviceName() async {
+    Map deviceInfo = (await DeviceInfoPlugin().deviceInfo).data;
+    String? brand = deviceInfo['brand'];
+    String? model = deviceInfo['model'];
+    String? name = deviceInfo['name'];
+
+    return name ?? '$brand $model';
+  }
+
+  handleEvent(event) {
+    print("event ${event.eventEnum!.field0}");
+    event.eventEnum?.when(
+        start: (_) {},
+        stop: (_) {},
+        requestToReceive: (request) {
+          print("enter request to receive");
+          showDialog(
+              context: navigatorKey.currentState!.overlay!.context,
+              builder: (context) {
+                return AlertDialog(
+                  content: Text("${request.from}要发送${request.fileName}等${request.fileNum}文件給您"),
+                  actions: [
+                    TextButton(
+                        onPressed: () async {
+                          print("comfirmReceiveFile ${request.fileName}");
+
+                          await comfirmReceiveFile(file: request.fileName, accept: true);
+                          Navigator.pop(context);
+                        },
+                        child: const Text("接收")),
+                    TextButton(
+                        onPressed: () async {
+                          await comfirmReceiveFile(file: request.fileName, accept: false);
+                          Navigator.pop(context);
+                        },
+                        child: const Text("取消")),
+                  ],
+                );
+              });
+        },
+        discoveryIp: (field0) {
+          setState(() {
+            discoverList.add(field0);
+          });
+        },
+        sendFile: (_) {},
+        startReceive: (_) {});
+
+    print("END RECEIVE event $event");
+  }
+
+  initApp() async {
+    String devicename = "";
+    if (Platform.isAndroid || Platform.isIOS) {
+      devicename = await getDeviceName();
+      print(devicename);
+      hostname = devicename;
+      setState(() {
+        hostname = devicename;
+      });
+    } else {
+      setState(() {
+        hostname = Platform.localHostname;
+      });
+      devicename = Platform.localHostname;
+    }
+
+    print("get devicname $devicename");
+    final Directory? downloadsDir = await getDownloadsDirectory();
+    final s = initCore(hostname: devicename, directory: downloadsDir!.path);
+    s.listen(handleEvent);
+  }
+
   @override
   void initState() {
     super.initState();
-    receiveEvent();
-  }
-
-  receiveEvent() {
-    final s = initCore();
-    s.listen((event) {
-      print("event ${event.eventEnum!.field0}");
-      event.eventEnum?.when(
-          start: (_) {},
-          stop: (_) {},
-          requestToReceive: (request) {
-            print("enter request to receive");
-            showDialog(
-                context: navigatorKey.currentState!.overlay!.context,
-                builder: (context) {
-                  return AlertDialog(
-                    content: Text("${request.from}要发送文件到你,文件名称${request.fileName}"),
-                    actions: [
-                      TextButton(
-                          onPressed: () async {
-                            print("comfirmReceiveFile ${request.fileName}");
-                            await comfirmReceiveFile(name: request.fileName);
-                            Navigator.pop(context);
-                          },
-                          child: const Text("接收")),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("取消")),
-                    ],
-                  );
-                });
-          },
-          discoveryIp: (field0) {
-            setState(() {
-              discoverList.add(field0.addr);
-            });
-          },
-          sendFile: (_) {},
-          startReceive: (_) {});
-
-      print("END RECEIVE event $event");
-    });
+    initApp();
   }
 }

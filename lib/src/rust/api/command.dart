@@ -9,20 +9,23 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 class DiscoveryIp {
   final String addr;
+  final String hostname;
 
   const DiscoveryIp({
     required this.addr,
+    required this.hostname,
   });
 
   @override
-  int get hashCode => addr.hashCode;
+  int get hashCode => addr.hashCode ^ hostname.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is DiscoveryIp &&
           runtimeType == other.runtimeType &&
-          addr == other.addr;
+          addr == other.addr &&
+          hostname == other.hostname;
 }
 
 ///
@@ -48,14 +51,16 @@ class Event {
 class RequestToReceive {
   final String fileName;
   final String from;
+  final int fileNum;
 
   const RequestToReceive({
     required this.fileName,
     required this.from,
+    required this.fileNum,
   });
 
   @override
-  int get hashCode => fileName.hashCode ^ from.hashCode;
+  int get hashCode => fileName.hashCode ^ from.hashCode ^ fileNum.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -63,11 +68,12 @@ class RequestToReceive {
       other is RequestToReceive &&
           runtimeType == other.runtimeType &&
           fileName == other.fileName &&
-          from == other.from;
+          from == other.from &&
+          fileNum == other.fileNum;
 }
 
 class SendFile {
-  final String path;
+  final List<String> path;
   final String addr;
 
   const SendFile({

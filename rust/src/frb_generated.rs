@@ -60,12 +60,15 @@ fn wire_comfirm_receive_file_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_name = <String>::sse_decode(&mut deserializer);
+            let api_accept = <bool>::sse_decode(&mut deserializer);
+            let api_file = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse(
                     (move || async move {
-                        Result::<_, ()>::Ok(crate::api::api::comfirm_receive_file(api_name).await)
+                        Result::<_, ()>::Ok(
+                            crate::api::api::comfirm_receive_file(api_accept, api_file).await,
+                        )
                     })()
                     .await,
                 )
@@ -124,16 +127,22 @@ fn wire_init_core_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_hostname = <String>::sse_decode(&mut deserializer);
+            let api_directory = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse(
                     (move || async move {
                         Result::<_, ()>::Ok(
-                            crate::api::api::init_core(StreamSink::new(
-                                context
-                                    .rust2dart_context()
-                                    .stream_sink::<_, crate::api::command::Event>(),
-                            ))
+                            crate::api::api::init_core(
+                                StreamSink::new(
+                                    context
+                                        .rust2dart_context()
+                                        .stream_sink::<_, crate::api::command::Event>(),
+                                ),
+                                api_hostname,
+                                api_directory,
+                            )
                             .await,
                         )
                     })()
@@ -255,11 +264,22 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
 impl SseDecode for crate::api::command::DiscoveryIp {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_addr = <String>::sse_decode(deserializer);
-        return crate::api::command::DiscoveryIp { addr: var_addr };
+        let mut var_hostname = <String>::sse_decode(deserializer);
+        return crate::api::command::DiscoveryIp {
+            addr: var_addr,
+            hostname: var_hostname,
+        };
     }
 }
 
@@ -312,6 +332,25 @@ impl SseDecode for crate::api::command::event::EventEnum {
     }
 }
 
+impl SseDecode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<String>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -342,9 +381,11 @@ impl SseDecode for crate::api::command::RequestToReceive {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_fileName = <String>::sse_decode(deserializer);
         let mut var_from = <String>::sse_decode(deserializer);
+        let mut var_fileNum = <i32>::sse_decode(deserializer);
         return crate::api::command::RequestToReceive {
             file_name: var_fileName,
             from: var_from,
+            file_num: var_fileNum,
         };
     }
 }
@@ -352,7 +393,7 @@ impl SseDecode for crate::api::command::RequestToReceive {
 impl SseDecode for crate::api::command::SendFile {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_path = <String>::sse_decode(deserializer);
+        let mut var_path = <Vec<String>>::sse_decode(deserializer);
         let mut var_addr = <String>::sse_decode(deserializer);
         return crate::api::command::SendFile {
             path: var_path,
@@ -394,20 +435,6 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
-impl SseDecode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u8().unwrap() != 0
-    }
-}
-
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -444,7 +471,11 @@ fn pde_ffi_dispatcher_sync_impl(
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::command::DiscoveryIp {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.addr.into_into_dart().into_dart()].into_dart()
+        [
+            self.addr.into_into_dart().into_dart(),
+            self.hostname.into_into_dart().into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -512,6 +543,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::command::RequestToReceive {
         [
             self.file_name.into_into_dart().into_dart(),
             self.from.into_into_dart().into_dart(),
+            self.file_num.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -594,10 +626,18 @@ impl SseEncode for String {
     }
 }
 
+impl SseEncode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u8(self as _).unwrap();
+    }
+}
+
 impl SseEncode for crate::api::command::DiscoveryIp {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.addr, serializer);
+        <String>::sse_encode(self.hostname, serializer);
     }
 }
 
@@ -640,6 +680,23 @@ impl SseEncode for crate::api::command::event::EventEnum {
     }
 }
 
+impl SseEncode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <String>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -665,13 +722,14 @@ impl SseEncode for crate::api::command::RequestToReceive {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.file_name, serializer);
         <String>::sse_encode(self.from, serializer);
+        <i32>::sse_encode(self.file_num, serializer);
     }
 }
 
 impl SseEncode for crate::api::command::SendFile {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.path, serializer);
+        <Vec<String>>::sse_encode(self.path, serializer);
         <String>::sse_encode(self.addr, serializer);
     }
 }
@@ -701,20 +759,6 @@ impl SseEncode for u8 {
 impl SseEncode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
-}
-
-impl SseEncode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u8(self as _).unwrap();
-    }
 }
 
 #[cfg(not(target_family = "wasm"))]

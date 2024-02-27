@@ -13,11 +13,15 @@ Future<void> stop({dynamic hint}) => RustLib.instance.api.stop(hint: hint);
 Future<void> sendFile({required SendFile message, dynamic hint}) =>
     RustLib.instance.api.sendFile(message: message, hint: hint);
 
-Future<void> comfirmReceiveFile({required String name, dynamic hint}) =>
-    RustLib.instance.api.comfirmReceiveFile(name: name, hint: hint);
+Future<void> comfirmReceiveFile(
+        {required bool accept, required String file, dynamic hint}) =>
+    RustLib.instance.api
+        .comfirmReceiveFile(accept: accept, file: file, hint: hint);
 
 Future<void> refreshDiscovery({dynamic hint}) =>
     RustLib.instance.api.refreshDiscovery(hint: hint);
 
-Stream<Event> initCore({dynamic hint}) =>
-    RustLib.instance.api.initCore(hint: hint);
+Stream<Event> initCore(
+        {required String hostname, required String directory, dynamic hint}) =>
+    RustLib.instance.api
+        .initCore(hostname: hostname, directory: directory, hint: hint);

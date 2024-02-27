@@ -18,10 +18,11 @@ message Stop {
 message RequestToReceive {
     string file_name=1;
     string from = 2;
+    int32  file_num=3;
 }
 
 message SendFile {
-    string path=1;
+    repeated string path=1;
     string addr=2;
 }
 
@@ -48,36 +49,46 @@ message Event {
 
 message DiscoveryIP {
     string addr = 1;
+    string hostname=2;
 }
 
 
 // UDP Discovery
-message DiscoveryReq {
+message DiscoveryEvent {
+    oneof discoveryEventEnum {
+        DiscoveryReq discovery_req = 1;
+        DiscoveryResp discovery_resp = 2;
+    }
+}
 
+message DiscoveryReq{
+    string self_hostname=1;
 }
 
 message DiscoveryResp {
-    string hostname=1;
+    string self_hostname=1;
 }
 
 // 上传文件,rust层之间通信
 message UploadFileRequest {
     oneof uploadFileEnum {
-        FileMetaData MetaData = 1;
-        bytes Content = 2;
-        Finish finish = 3;
+        FileMetaData MetaData = 2;
+        bytes Content = 3;
+        Finish finish = 4;
     }
 
+}
+
+message RequestAcceptFileReq {
+    string first_file_name = 1;
+    int32  file_num =2;
+}
+
+message RequestAcceptFileResp {
+    bool accept = 1;
 }
 
 message UploadFileResp {
-    oneof uploadFileRespEnum {
-        AcceptFile accept_file = 4;
-    }
-}
-
-message AcceptFile {
-
 }
 
 message Finish {
@@ -92,5 +103,6 @@ message FileMetaData {
 
 
 service ShareFile {
+    rpc RequestAcceptFile(RequestAcceptFileReq) returns ( RequestAcceptFileResp);
     rpc UploadFile(stream UploadFileRequest) returns (stream UploadFileResp);
 }
