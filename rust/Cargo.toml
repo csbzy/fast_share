@@ -13,12 +13,12 @@ tokio = { version = "1.36.0", features = ["full"] }
 prost = "0.12.3"
 bytes = "1.5.0"
 md5 = "0.7.0"
-env_logger = "0.11.2"
-tonic = "0.11.0"
+tonic = { version = "0.11.0", features = ["transport", "tls", "gzip"] }
 tokio-stream = "0.1.14"
 log = "0.4.20"
 android_logger = "0.13.3"
+simplelog = "0.12.1"
 
 
 [build-dependencies]
-tonic-build  = { version = "0.11.0" }
+tonic-build = { version = "0.11.0" }

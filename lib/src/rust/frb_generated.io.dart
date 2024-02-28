@@ -33,6 +33,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   EventEnum dco_decode_box_autoadd_event_enum(dynamic raw);
 
   @protected
+  FileProgress dco_decode_box_autoadd_file_progress(dynamic raw);
+
+  @protected
   RequestToReceive dco_decode_box_autoadd_request_to_receive(dynamic raw);
 
   @protected
@@ -55,6 +58,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   EventEnum dco_decode_event_enum(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FileProgress dco_decode_file_progress(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -102,6 +111,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   EventEnum sse_decode_box_autoadd_event_enum(SseDeserializer deserializer);
 
   @protected
+  FileProgress sse_decode_box_autoadd_file_progress(
+      SseDeserializer deserializer);
+
+  @protected
   RequestToReceive sse_decode_box_autoadd_request_to_receive(
       SseDeserializer deserializer);
 
@@ -126,6 +139,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   EventEnum sse_decode_event_enum(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FileProgress sse_decode_file_progress(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -176,6 +195,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       EventEnum self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_file_progress(
+      FileProgress self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_request_to_receive(
       RequestToReceive self, SseSerializer serializer);
 
@@ -201,6 +224,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_event_enum(EventEnum self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_file_progress(FileProgress self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);

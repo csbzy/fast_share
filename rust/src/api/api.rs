@@ -1,10 +1,10 @@
 use super::command::Event;
 use crate::api::command::SendFile;
-use crate::core::core::{JustShareCoreConfig, JUSTSHARE_CORE};
+use crate::core::core::JUSTSHARE_CORE;
 use crate::frb_generated::StreamSink;
 use log::{error, LevelFilter};
+use simplelog::{CombinedLogger, Config, SimpleLogger};
 static INIT: std::sync::Once = std::sync::Once::new();
-static RECEIVE: std::sync::Once = std::sync::Once::new();
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {
     // Default utilities - feel free to customize
@@ -27,7 +27,10 @@ pub async fn refresh_discovery() {
 
 pub async fn init_core(sink: StreamSink<Event>, hostname: String, directory: String) {
     INIT.call_once(|| {
-        error!("init justshare core");
+        error!(
+            "init justshare core hostname: {}, directory: {}",
+            hostname, directory
+        );
 
         #[cfg(target_os = "android")]
         android_logger::init_once(
@@ -41,7 +44,23 @@ pub async fn init_core(sink: StreamSink<Event>, hostname: String, directory: Str
             .unwrap();
 
         #[cfg(not(target_os = "android"))]
-        env_logger::init();
+        CombinedLogger::init(vec![
+            #[cfg(feature = "termcolor")]
+            TermLogger::new(
+                LevelFilter::Debug,
+                Config::default(),
+                TerminalMode::Mixed,
+                ColorChoice::Auto,
+            ),
+            #[cfg(not(feature = "termcolor"))]
+            SimpleLogger::new(LevelFilter::Debug, Config::default()),
+            // WriteLogger::new(
+            //     LevelFilter::Info,
+            //     Config::default(),
+            //     File::create("my_rust_binary.log").unwrap(),
+            // ),
+        ])
+        .unwrap();
 
         flutter_rust_bridge::spawn(async move {
             JUSTSHARE_CORE.init_core(hostname, directory).await;

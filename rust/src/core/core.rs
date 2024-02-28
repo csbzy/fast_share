@@ -4,29 +4,31 @@ use crate::api::command::{
     upload_file_request, FileMetaData, SendFile, UploadFileRequest,
 };
 use crate::api::command::{upload_file_request::UploadFileEnum, Event};
+use crate::core::utils;
 use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
 use lazy_static::lazy_static;
-use log::error;
-use md5;
+use log::{debug, error};
 use prost::Message;
 use std::collections::HashMap;
-use std::net::{IpAddr, Ipv4Addr, SocketAddrV4};
+use std::fs;
+use std::io::Write;
+use std::net::{IpAddr, Ipv4Addr};
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::net::UdpSocket;
 use tokio::sync::mpsc;
-use tokio::time::sleep;
+use tokio::time::Instant;
 use tokio::{
-    fs,
     io::{self, AsyncWriteExt},
     sync::mpsc::{Receiver, Sender},
     sync::Mutex,
 };
-use tokio_stream::{wrappers::ReceiverStream, Stream, StreamExt};
+use tokio_stream::{wrappers::ReceiverStream, Stream};
+use tonic::codec::CompressionEncoding;
+
 use tonic::{transport::Server, Request, Response, Status, Streaming};
 lazy_static! {
     pub static ref JUSTSHARE_CORE: MutexJustShareCore = MutexJustShareCore::new();
@@ -48,16 +50,16 @@ impl MutexJustShareCore {
                 port: 8965,
                 hostname: hostname,
                 save_directory: "".to_string(),
+                send_file_worker_num: 5,
             }))), //
         }
     }
 
     pub async fn send_file(&self, message: SendFile) {
-        error!("enter send file");
+        debug!("enter send file");
         let core_clone = self.core.clone(); // Create a clone of the Arc
         flutter_rust_bridge::spawn(async move {
-            error!("enter send file spawn");
-
+            debug!("enter send file spawn");
             let mut core_lock = core_clone.lock().await; // Use the cloned Arc inside the async block         // let mut core = core_lock.await;
             let _ = core_lock.send_file(message).await;
         })
@@ -73,12 +75,12 @@ impl MutexJustShareCore {
     }
 
     pub async fn refresh_discovery(&self) {
-        error!("start refresh discovery wait lock");
+        debug!("start refresh discovery wait lock");
         let core_lock = self.core.lock().await;
-        error!("start refresh discovery wait channel lock");
+        debug!("start refresh discovery wait channel lock");
 
         let tx = core_lock.discovery_channel_sender.lock().await;
-        error!("start refresh discovery send");
+        debug!("start refresh discovery send");
 
         tx.send(()).await.unwrap();
     }
@@ -90,35 +92,40 @@ impl MutexJustShareCore {
     }
 
     pub async fn start_receive_file(&self) {
-        error!("start handle receive file");
+        debug!("start handle receive file");
         let core_clone = self.core.clone();
         let core_lock = core_clone.lock().await;
         let port = core_lock.config.port.clone();
         flutter_rust_bridge::spawn(async move {
-            error!("ENTER SPAWN start handle receive file");
+            debug!("ENTER SPAWN start handle receive file");
             let addr = format!("0.0.0.0:{}", port.to_string()).parse().unwrap();
             let sf = MyShareFileServer::default();
-            println!("fileListenServer listening on {}", addr);
+            debug!("fileListenServer listening on {}", addr);
             Server::builder()
-                .add_service(ShareFileServer::new(sf))
+                .add_service(
+                    ShareFileServer::new(sf)
+                        .accept_compressed(CompressionEncoding::Gzip)
+                        .max_decoding_message_size(256 * 1024 * 1024)
+                        .max_encoding_message_size(256 * 1024 * 1024),
+                )
                 .serve(addr)
                 .await
                 .unwrap();
-            error!("LEAVE SPAWN start handle receive file");
+            debug!("LEAVE SPAWN start handle receive file");
         });
 
-        error!("unlock core");
+        debug!("unlock core");
     }
 
     pub async fn comfirm_receive_file(&self, accept: bool, file_name: String) {
         let core_clone = Arc::clone(&self.core);
-        error!("start to get core lock for {:?}", file_name);
+        debug!("start to get core lock for {:?}", file_name);
         let core = core_clone.lock().await;
-        error!("comfirm_receive_file lock core");
+        debug!("comfirm_receive_file lock core");
         let db = &core.comfirm_receive_db;
-        error!("start to get db lock");
+        debug!("start to get db lock");
         let mut db = db.lock().await;
-        error!("db lock get");
+        debug!("db lock get");
         match db.remove(&file_name) {
             Some(comfirm_tx) => {
                 let resp = comfirm_tx.send(accept).await; // Ignore the result with let _
@@ -129,7 +136,7 @@ impl MutexJustShareCore {
                 error!("comfirm_receive_file not found");
             }
         }
-        error!("comfirm_receive_file nlock core");
+        debug!("comfirm_receive_file nlock core");
     }
 
     pub async fn do_receive_file(
@@ -138,17 +145,14 @@ impl MutexJustShareCore {
         tx: Sender<Result<UploadFileResp, Status>>,
         from: String,
     ) {
-        let mut save_directory = "".to_string();
-        {
-            error!("do_receive_file upload file");
-            let core_clone = Arc::clone(&self.core); // Create a clone of the Arc
-            error!("do_receive_file upload file wait lock");
+        debug!("do_receive_file upload file");
+        let core_clone = Arc::clone(&self.core); // Create a clone of the Arc
+        debug!("do_receive_file upload file wait lock");
 
-            let core_lock = core_clone.lock().await;
-            error!("do_receive_file upload file get lock");
-            save_directory = core_lock.config.save_directory.clone();
-        }
-        JustShareCore::do_receive_file(save_directory, stream, tx, from).await;
+        let core_lock = core_clone.lock().await;
+        debug!("do_receive_file upload file get lock");
+
+        core_lock.do_receive_file(stream, tx, from).await;
     }
 
     pub async fn async_event_to_frontend(&self, sink: StreamSink<Event>) {
@@ -187,13 +191,13 @@ impl JustShareCore {
         c
     }
 
-    async fn send_file(&mut self, message: SendFile) -> io::Result<()> {
-        error!("enter core send: {:?}", message);
+    async fn send_file(&mut self, message: SendFile) {
+        debug!("enter core send: {:?}", message);
         let client = ShareFileClient::connect(format!("http://{:}", message.addr)).await;
         let file_paths = message.path.clone();
 
         if file_paths.is_empty() {
-            return Ok(());
+            return;
         }
 
         let first_file_name = file_paths[0].split("/").last().unwrap_or_default();
@@ -210,112 +214,150 @@ impl JustShareCore {
             .unwrap()
             .into_inner();
         if !resp.accept {
-            return Ok(());
+            return;
         }
-        Ok(for file_path in file_paths.clone() {
+
+        let file_paths = file_paths.clone();
+        let num_threads = self.config.send_file_worker_num;
+        let chunk_size = (file_paths.len() + num_threads - 1) / num_threads;
+
+        // 开辟self.config.send_file_worker_num个线程处理文件
+        file_paths.chunks(chunk_size).for_each(|chunk| {
+            let chunk: Vec<String> = chunk.to_vec();
             let addr = message.addr.clone();
+            let event_to_chanel = self.event_to_frontend_channel.clone().unwrap();
+
             flutter_rust_bridge::spawn(async move {
-                let client = ShareFileClient::connect(format!("http://{:}", addr)).await;
-
-                let path = file_path.clone();
-                let file = tokio::fs::File::open(path.clone()).await.unwrap();
-                let file_metadata = file.metadata().await.unwrap();
-                let file_size = file_metadata.len();
-                drop(file);
-                // Compute MD5 checksum of the file.
-                let file_byte: Vec<u8> = fs::read(path).await.unwrap();
-                let md5_checksum = md5::compute(file_byte.clone());
-
-                let file_path = file_path.clone();
-                let file_name = file_path.split("/").last().unwrap_or_default();
-
-                let request = UploadFileRequest {
-                    upload_file_enum: Some(UploadFileEnum::MetaData(FileMetaData {
-                        file_name: file_name.to_string(),
-                        file_size: file_size as i32,
-                        md5: format!("{:x}", md5_checksum),
-                    })),
-                };
-
-                error!("start send request: {:?}", request);
-                let (tx, rx) = mpsc::channel(5);
-                let request_stream = ReceiverStream::new(rx);
-                let response = client.unwrap().upload_file(request_stream).await.unwrap();
-                let mut resp_stream = response.into_inner();
-                let res = tx.send(request).await.unwrap();
-                error!(
-                    "send file meta data res: {:?}, file bytes:{:?}",
-                    res,
-                    file_byte.len()
-                );
-                error!("finish send request: file meta data",);
-
-                let max_packet_size = 1024; // 每包最大1MB
-                for chunk in file_byte.chunks(max_packet_size) {
-                    let res = tx
-                        .send(UploadFileRequest {
-                            upload_file_enum: Some(UploadFileEnum::Content(chunk.to_vec())),
-                        })
-                        .await
-                        .unwrap();
-
-                    error!("send file content res: {:?}", res);
-                    // while let Some(response) = resp_stream.message().await.unwrap() {
-                    //     // Handle the response here
-                    //     println!("Received response: {:?}", response);
-                    // }
+                for file_path in chunk {
+                    JustShareCore::do_send_file(file_path, addr.clone(), event_to_chanel.clone())
+                        .await;
                 }
-
-                let res = tx
-                    .send(UploadFileRequest {
-                        upload_file_enum: Some(UploadFileEnum::Finish(Finish {})),
-                    })
-                    .await
-                    .unwrap();
-
-                error!("send file finish res: {:?}", res);
             });
-        })
+        });
     }
 
-    //     let request = UploadFileRequest {
-    //         upload_file_enum: Some(UploadFileEnum::RequestAccept(RequestAccept {
-    //             first_file_name: first_file_name.to_string(),
-    //             file_num: file_paths.len() as i32,
-    //         })),
-    //     };
-    //     error!("start send request: {:?}", request);
-    //     let (tx, rx) = mpsc::channel(5);
+    pub async fn do_send_file(
+        file_path: String,
+        addr: String,
+        event_to_frontend_channel: StreamSink<Event>,
+    ) {
+        let client = ShareFileClient::connect(format!("http://{:}", addr)).await;
+        let path = file_path.clone();
+        let mut file = tokio::fs::File::open(path.clone()).await.unwrap();
+        let file_metadata = file.metadata().await.unwrap();
+        let file_size = file_metadata.len();
+        let file_path = file_path.clone();
+        let file_name = file_path.split("/").last().unwrap_or_default();
 
-    //     error!("send request {:?}", tx.send(request).await);
-    //     error!("finish send request: file meta data",);
-    //     let request_stream = ReceiverStream::new(rx);
+        let request = UploadFileRequest {
+            upload_file_enum: Some(UploadFileEnum::MetaData(FileMetaData {
+                file_name: file_name.to_string(),
+                file_size: file_size,
+                md5: utils::calc_md5(&file_path),
+            })),
+        };
 
-    //     let response = client.unwrap().upload_file(request_stream).await.unwrap();
-    //     let mut resp_stream = response.into_inner();
-    //     flutter_rust_bridge::spawn(async move {
-    //         while let Some(received) = resp_stream.next().await {
-    //             let resp = received.unwrap();
-    //             error!("received message: `{:?}`", resp);
+        debug!("start send request: {:?}", request);
+        let (tx, rx) = mpsc::channel(5);
+        let request_stream = ReceiverStream::new(rx);
+        let response = client.unwrap().upload_file(request_stream).await.unwrap();
+        let mut resp_stream = response.into_inner();
+        let res = tx.send(request).await.unwrap();
+        error!(
+            "send file meta data res: {:?}, file bytes:{:?}",
+            res, file_size
+        );
+        debug!("finish send request: file meta data",);
 
-    //             match resp {
-    //                 UploadFileResp {
-    //                     upload_file_resp_enum:
-    //                         Some(upload_file_resp::UploadFileRespEnum::AcceptFile(a)),
-    //                 } => {
-    //                     error!("get accept file resp: {:?},start to send file byte", a);
+        let chunk_size = 30 * 1024 * 1024; // 每包最大30MB
+        let mut buffer = vec![0; chunk_size];
+        let mut offset: u64 = 0;
+        let start_time = std::time::Instant::now();
+        while offset < file_size {
+            debug!("offset: {:?}, file_size: {:?}", offset, file_size);
+            let bytes_to_read =
+                std::cmp::min(chunk_size, (file_size - offset).try_into().unwrap()) as usize;
+            file.read_exact(&mut buffer[0..bytes_to_read])
+                .await
+                .unwrap();
+            offset += bytes_to_read as u64;
+            let file_progress = utils::calc_progress(offset as usize, file_size);
 
-    //                 }
+            let elapsed_time = start_time.elapsed();
+            let speed_mbps = utils::calc_speed(offset as usize, elapsed_time);
 
-    //                 _r => {
-    //                     error!("UploadFileResponse: {:?}", _r);
-    //                 }
-    //             }
-    //         }
-    //     });
+            let res = match tx
+                .send(UploadFileRequest {
+                    upload_file_enum: Some(UploadFileEnum::Content(
+                        buffer[0..bytes_to_read].to_vec(),
+                    )),
+                })
+                .await
+            {
+                Ok(res) => res,
+                Err(e) => {
+                    error!("send file content error: {:}", e);
+                    JustShareCore::progress_to_frontend(
+                        event_to_frontend_channel.clone(),
+                        FileProgress {
+                            file_name: file_name.to_string(),
+                            file_progress: file_progress,
+                            is_error: true,
+                            speed: speed_mbps,
+                            progress_type: utils::ProgressType::Download as i32,
+                        },
+                    );
+                    break;
+                }
+            };
 
-    //     Ok(())
-    // }
+            debug!("send file content res: {:?}", res);
+            let resp = match resp_stream.message().await {
+                Ok(resp) => resp,
+                Err(e) => {
+                    error!("recv upload file resp error: {:}", e);
+                    JustShareCore::progress_to_frontend(
+                        event_to_frontend_channel.clone(),
+                        FileProgress {
+                            file_name: file_name.to_string(),
+                            file_progress: file_progress,
+                            is_error: true,
+                            speed: speed_mbps,
+                            progress_type: utils::ProgressType::Download as i32,
+                        },
+                    );
+                    break;
+                }
+            };
+            debug!("recv upload file resp: {:?}", resp);
+
+            JustShareCore::progress_to_frontend(
+                event_to_frontend_channel.clone(),
+                FileProgress {
+                    file_name: file_name.to_string(),
+                    file_progress: file_progress,
+                    is_error: false,
+                    speed: speed_mbps,
+                    progress_type: utils::ProgressType::Download as i32,
+                },
+            );
+        }
+
+        let res = match tx
+            .send(UploadFileRequest {
+                upload_file_enum: Some(UploadFileEnum::Finish(Finish {})),
+            })
+            .await
+        {
+            Ok(res) => res,
+            Err(e) => {
+                error!("send file finish error: {:}", e);
+            }
+        };
+
+        debug!("send file finish res: {:?}", res);
+    }
+
     pub async fn do_requset_accept_file_to_frontend(
         comfirm_receive_db: Arc<Mutex<HashMap<String, Arc<mpsc::Sender<bool>>>>>,
         event_to_frontend_channel: StreamSink<Event>,
@@ -324,77 +366,154 @@ impl JustShareCore {
     ) -> Result<Response<RequestAcceptFileResp>, Status> {
         let db = comfirm_receive_db.clone();
         let (comfirm_tx, mut comfirm_rx) = mpsc::channel::<bool>(1);
-        error!("try to lock db");
+        debug!("try to lock db");
         db.lock()
             .await
             .insert(request.first_file_name.clone(), Arc::new(comfirm_tx));
-        error!("unlock db");
+        debug!("unlock db");
 
-        let event_to_frontend = event_to_frontend_channel.clone();
-        error!("try send event to frontend");
-        let _ = event_to_frontend.add(Event {
-            event_enum: Some(event::EventEnum::RequestToReceive(RequestToReceive {
-                file_name: request.first_file_name.clone(),
-                from: from.clone(),
-                file_num: request.file_num,
-            })),
-        });
+        debug!("try send event to frontend");
+        JustShareCore::event_to_frontend(
+            event_to_frontend_channel,
+            Event {
+                event_enum: Some(event::EventEnum::RequestToReceive(RequestToReceive {
+                    file_name: request.first_file_name.clone(),
+                    from: from.clone(),
+                    file_num: request.file_num,
+                })),
+            },
+        );
 
-        error!("wait for comfirm response");
+        debug!("wait for comfirm response");
         // wait for response
         let s = comfirm_rx.recv().await;
 
-        error!("get comfirm response: {:?}", s);
+        debug!("get comfirm response: {:?}", s);
         let accept = s.unwrap();
 
         Ok(Response::new(RequestAcceptFileResp { accept: accept }))
     }
 
     pub async fn do_receive_file(
-        save_directory: String,
+        &self,
         mut stream: Streaming<UploadFileRequest>,
         tx: Sender<Result<UploadFileResp, Status>>,
         from: String,
     ) {
-        error!("just share core do to receive upload file from {:}", from);
-        let save_path: String = save_directory;
-        flutter_rust_bridge::spawn(async move {
-            error!("just share core do to receive upload file spawn");
-            let mut file = None;
+        debug!("just share core do to receive upload file from {:}", from);
 
-            while let Some(upload) = stream.message().await.unwrap() {
+        debug!("do_receive_file upload file");
+        let core_clone = self; // Create a clone of the Arc
+        debug!("do_receive_file upload file wait lock");
+
+        debug!("do_receive_file upload file get lock");
+        let save_path = core_clone.config.save_directory.clone();
+        let event_to_frontend_channel = core_clone.event_to_frontend_channel.clone().unwrap();
+
+        flutter_rust_bridge::spawn(async move {
+            debug!("just share core do to receive upload file spawn");
+            let mut file = None;
+            let mut filename = "".to_string();
+            let mut file_size = 0;
+            let mut recv_size = 0;
+            let start_time = Instant::now();
+
+            loop {
+                let recv = stream.message().await;
+                let upload = match recv {
+                    Ok(upload) => upload.unwrap(),
+                    Err(e) => {
+                        error!("receive upload file error: {:}", e);
+                        JustShareCore::progress_to_frontend(
+                            event_to_frontend_channel.clone(),
+                            FileProgress {
+                                file_name: filename.clone(),
+                                file_progress: 0,
+                                is_error: true,
+                                speed: 0.0,
+                                progress_type: utils::ProgressType::Download as i32,
+                            },
+                        );
+                        break;
+                    }
+                };
                 match upload.upload_file_enum {
                     Some(upload_file_request::UploadFileEnum::MetaData(metadata)) => {
-                        error!("receive upload file meta data {:?}", metadata);
-                        let filename = metadata.file_name.clone();
-                        error!("try to lock db");
+                        debug!("receive upload file meta data {:?}", metadata);
+                        filename = metadata.file_name.clone();
                         let mut file_path = PathBuf::from(save_path.clone());
-                        file_path.push(filename);
-                        error!("start to create file: {:?}", file_path.display());
-                        file = Some(tokio::fs::File::create(&file_path).await.map_err(|e| {
-                            error!("create file error: {:?}", e);
-                            Status::internal(format!("Failed to create file: {}", e))
-                        })?);
-                        tx.send(Ok(UploadFileResp {})).await.unwrap();
+                        file_path.push(filename.clone());
+                        debug!("start to create file: {:?}", file_path.display());
+                        file = match fs::File::create(&file_path) {
+                            Ok(file) => {
+                                debug!("create file success");
+                                Some(file)
+                            }
+                            Err(e) => {
+                                error!("create file error: {:}", e);
+                                return Err(Status::internal(format!(
+                                    "Failed to create file: {}",
+                                    e
+                                )));
+                            }
+                        };
+                        debug!("create file success");
+                        file_size = metadata.file_size;
+                        debug!("BEGIN TO SEND file success");
+                        JustShareCore::progress_to_frontend(
+                            event_to_frontend_channel.clone(),
+                            FileProgress {
+                                file_name: filename.clone(),
+                                file_progress: 0,
+                                is_error: false,
+                                speed: 0.0,
+                                progress_type: utils::ProgressType::Download as i32,
+                            },
+                        );
+
+                        let resp = tx.send(Ok(UploadFileResp {})).await;
+                        debug!("finish send file resp: {:?}", resp);
                     }
                     Some(upload_file_request::UploadFileEnum::Content(chunk)) => {
                         // Process file chunk
-                        error!("receive upload file chunk");
+                        debug!("receive upload file chunk");
                         if let Some(file) = file.as_mut() {
-                            let res = file.write_all(&chunk).await;
+                            let res = file.write_all(&chunk);
                             error!("write file error: {:?}", res);
-                            tx.send(Ok(UploadFileResp {})).await.unwrap();
+
+                            recv_size += chunk.len();
+                            let file_progress = utils::calc_progress(recv_size, file_size);
+
+                            let elapsed_time = start_time.elapsed();
+                            let download_speed_mbps = utils::calc_speed(recv_size, elapsed_time);
+
+                            JustShareCore::progress_to_frontend(
+                                event_to_frontend_channel.clone(),
+                                FileProgress {
+                                    file_name: filename.clone(),
+                                    file_progress: file_progress,
+                                    is_error: false,
+                                    speed: download_speed_mbps,
+                                    progress_type: utils::ProgressType::Download as i32,
+                                },
+                            );
+                            match tx.send(Ok(UploadFileResp {})).await {
+                                Ok(_) => {}
+                                Err(r) => {
+                                    error!("send upload file resp error: {:?}", r);
+                                }
+                            };
                         } else {
                             return Err(Status::failed_precondition("No file metadata provided"));
                         }
                     }
                     Some(upload_file_request::UploadFileEnum::Finish(_)) => {
-                        error!("receive upload file finish");
+                        debug!("receive upload file finish");
                         if let Some(file) = file.as_mut() {
-                            file.flush().await.map_err(|e| {
+                            file.flush().map_err(|e| {
                                 Status::internal(format!("Failed to flush file: {}", e))
                             })?;
-                            file.sync_all().await.map_err(|e| {
+                            file.sync_all().map_err(|e| {
                                 Status::internal(format!("Failed to sync file: {}", e))
                             })?;
                         }
@@ -407,7 +526,7 @@ impl JustShareCore {
                     }
                 }
             }
-            error!("stream end");
+            debug!("stream end");
             Ok(())
         });
     }
@@ -448,7 +567,7 @@ impl JustShareCore {
         let sender = tx.lock().await;
         let _ = sender.send(()).await;
 
-        error!("server local ip {:}", socket.local_addr().unwrap().ip());
+        debug!("server local ip {:}", socket.local_addr().unwrap().ip());
         let my_hostname = core_clone.config.hostname.clone();
 
         let db = core_clone.discovery_db.clone();
@@ -458,15 +577,14 @@ impl JustShareCore {
                 let mut rx = rx.lock().await;
                 tokio::select! {
                     Ok((number_of_bytes,src_addr))=socket.recv_from(&mut buf)=>{
-                        error!("Received {} bytes from {:?}", number_of_bytes, src_addr);
+                        debug!("Received {} bytes from {:?}", number_of_bytes, src_addr);
                         let src_ip = src_addr.ip();
-                        error!("srcip: {:?} local_ip: {:?}", src_ip,local_ip);
+                        debug!("srcip: {:?} local_ip: {:?}", src_ip,local_ip);
                         if src_ip == local_ip{
-                            error!("rece discovery ip from same ip");
                             continue
                         }
 
-                        error!("receive raw buf:{:?}",&buf[..number_of_bytes]);
+                        debug!("receive raw buf:{:?}",&buf[..number_of_bytes]);
                         let message =
                         match DiscoveryEvent::decode(&buf[..number_of_bytes]){
                             Ok(message) => message,
@@ -477,11 +595,11 @@ impl JustShareCore {
                         };
 
                         let src_ip = src_addr.ip();
-                        error!("Message after decode {:?}", message);
+                        debug!("Message after decode {:?}", message);
                         let other_hostname:String;
                         match message.discovery_event_enum.unwrap() {
                             DiscoveryEventEnum::DiscoveryReq(DiscoveryReq {self_hostname}) => {
-                                error!("get discovery req from: {:?}", src_addr);
+                                debug!("get discovery req from: {:?}", src_addr);
                                 let resp = DiscoveryEvent{discovery_event_enum:Some(
                                     discovery_event::DiscoveryEventEnum::DiscoveryResp(DiscoveryResp{
                                         self_hostname:my_hostname.clone(),
@@ -489,21 +607,21 @@ impl JustShareCore {
                                 let mut buf = vec![];
                                 resp.encode(&mut buf).unwrap();
                                 let res = socket.send_to(&buf, src_addr).await;
-                                error!("send hello res: {:?} to {:?}", res,src_addr);
+                                debug!("send hello res: {:?} to {:?}", res,src_addr);
                                 other_hostname = self_hostname;
                             }
 
                             DiscoveryEventEnum::DiscoveryResp(  DiscoveryResp { self_hostname:hostname}) => {
-                                error!("discovery hostname:{:?} ip: {:?}", hostname,src_ip);
+                                debug!("discovery hostname:{:?} ip: {:?}", hostname,src_ip);
                                 other_hostname = hostname;
                             }
                         }
-                        error!("wait for db lock ");
+                        debug!("wait for db lock ");
                         let mut db = db.lock().await;
-                        error!("get db lock ");
+                        debug!("get db lock ");
 
                         if let Some(ip) = db.get(&other_hostname) {
-                            error!("had receive from ip: {}", ip);
+                            debug!("had receive from ip: {}", ip);
                             continue
                         }
 
@@ -518,11 +636,12 @@ impl JustShareCore {
                         },
                          )),
                         };
-                        let _ = event_to_frontend.add(event);
+                        JustShareCore::event_to_frontend(event_to_frontend.clone(), event);
+
                     }
 
                     Some(()) =rx.recv() => {
-                        error!("discovery request");
+                        debug!("discovery request");
                         {
                             let mut db = db.lock().await;
                             db.clear();
@@ -537,11 +656,27 @@ impl JustShareCore {
                             let result = socket
                             .send_to(&buf, &broadcast_addr)
                             .await;
-                            error!(" send discovery result: {:?} ", result,);
+                        debug!(" send discovery result: {:?} ", result,);
                     }
                 }
             }
         });
+    }
+    pub fn event_to_frontend(channel: StreamSink<Event>, event: Event) {
+        let res = channel.add(event);
+        debug!("add event res: {:?}", res);
+    }
+
+    pub fn progress_to_frontend(
+        event_to_frontend_channel: StreamSink<Event>,
+        progress: FileProgress,
+    ) {
+        JustShareCore::event_to_frontend(
+            event_to_frontend_channel,
+            Event {
+                event_enum: Some(event::EventEnum::FileProgress(progress)),
+            },
+        );
     }
 }
 
@@ -560,7 +695,7 @@ impl ShareFile for MyShareFileServer {
 
         let stream: Streaming<UploadFileRequest> = req.into_inner();
         let (tx, rx) = mpsc::channel(10);
-        error!("start to receive upload file");
+        debug!("start to receive upload file");
         //TODO handle error
         let _res = JUSTSHARE_CORE
             .do_receive_file(stream, tx, from.to_string())
@@ -578,15 +713,15 @@ impl ShareFile for MyShareFileServer {
     ) -> std::result::Result<Response<RequestAcceptFileResp>, Status> {
         let from = request.remote_addr().unwrap();
         let req = request.into_inner();
-        error!("do_receive_file upload file");
+        debug!("do_receive_file upload file");
         let core_clone = JUSTSHARE_CORE.core.clone(); // Create a clone of the Arc
-        error!("do_receive_file upload file wait lock");
+        debug!("do_receive_file upload file wait lock");
         // let db
         let db: Arc<Mutex<HashMap<String, Arc<Sender<bool>>>>>;
         let event_to_frontend_channel: StreamSink<Event>;
         {
             let core_lock = core_clone.lock().await;
-            error!("do_receive_file upload file get lock");
+            debug!("do_receive_file upload file get lock");
             db = core_lock.comfirm_receive_db.clone();
             event_to_frontend_channel = core_lock.event_to_frontend_channel.clone().unwrap();
         }
@@ -605,4 +740,5 @@ pub struct JustShareCoreConfig {
     pub port: u16,
     pub hostname: String,
     pub save_directory: String,
+    pub send_file_worker_num: usize,
 }

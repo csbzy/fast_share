@@ -5,13 +5,17 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:just_share/permission_handler.dart';
 import 'package:just_share/src/rust/api/api.dart';
 import 'package:just_share/src/rust/api/command.dart';
 import 'package:just_share/src/rust/frb_generated.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+  final res = await requestFilePermission();
+  print("$res");
 
   runApp(const Main());
 }
@@ -31,6 +35,7 @@ class _MainState extends State<Main> {
   var selectedIndex = -1;
   Map<String, dynamic> deviceMeta = {};
   var hostname = "";
+  Map<String, FileProgress> uploadFileList = {};
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +65,33 @@ class _MainState extends State<Main> {
                           )));
                 },
               )),
+              Expanded(
+                  child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black), borderRadius: BorderRadius.circular(20)),
+                      child: ListView.builder(
+                        itemCount: uploadFileList.length,
+                        itemBuilder: (context, index) {
+                          final fileName = uploadFileList.keys.elementAt(index);
+                          final progress = uploadFileList[fileName]!.fileProgress;
+                          final speed = uploadFileList[fileName]!.speed;
+
+                          return Center(
+                              child: ListTile(
+                                  title: Text(fileName),
+                                  subtitle: Row(children: [
+                                    Expanded(
+                                        child: LinearProgressIndicator(
+                                      minHeight: 10.0,
+                                      value: progress / 100,
+                                    )),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text("${speed.toStringAsFixed(3)} MB/s")
+                                  ])));
+                        },
+                      ))),
               ElevatedButton(
                   onPressed: () async {
                     if (selectedIndex == "") {
@@ -103,44 +135,73 @@ class _MainState extends State<Main> {
     return name ?? '$brand $model';
   }
 
-  handleEvent(event) {
+  Future<String?> getDownloadPath() async {
+    Directory? directory;
+    try {
+      if (Platform.isIOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else if (Platform.isAndroid) {
+        directory = Directory('/storage/emulated/0/Download');
+        // // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
+        // // ignore: avoid_slow_async_io
+        // if (!await directory.exists()) directory = await getExternalStorageDirectory();
+        // directory = await getApplicationDocumentsDirectory();
+      } else {
+        directory = await getDownloadsDirectory();
+      }
+    } catch (err, stack) {
+      print("Cannot get download folder path");
+    }
+    print("download path ${directory?.path}");
+    return directory?.path;
+  }
+
+  handleEvent(Event event) {
     print("event ${event.eventEnum!.field0}");
     event.eventEnum?.when(
-        start: (_) {},
-        stop: (_) {},
-        requestToReceive: (request) {
-          print("enter request to receive");
-          showDialog(
-              context: navigatorKey.currentState!.overlay!.context,
-              builder: (context) {
-                return AlertDialog(
-                  content: Text("${request.from}要发送${request.fileName}等${request.fileNum}文件給您"),
-                  actions: [
-                    TextButton(
-                        onPressed: () async {
-                          print("comfirmReceiveFile ${request.fileName}");
+      start: (_) {},
+      stop: (_) {},
+      requestToReceive: (request) {
+        print("enter request to receive");
+        showDialog(
+            context: navigatorKey.currentState!.overlay!.context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text("${request.from}要发送${request.fileName}等${request.fileNum}文件給您"),
+                actions: [
+                  TextButton(
+                      onPressed: () async {
+                        print("comfirmReceiveFile ${request.fileName}");
+                        await requestFilePermission();
+                        await comfirmReceiveFile(file: request.fileName, accept: true);
 
-                          await comfirmReceiveFile(file: request.fileName, accept: true);
-                          Navigator.pop(context);
-                        },
-                        child: const Text("接收")),
-                    TextButton(
-                        onPressed: () async {
-                          await comfirmReceiveFile(file: request.fileName, accept: false);
-                          Navigator.pop(context);
-                        },
-                        child: const Text("取消")),
-                  ],
-                );
-              });
-        },
-        discoveryIp: (field0) {
-          setState(() {
-            discoverList.add(field0);
-          });
-        },
-        sendFile: (_) {},
-        startReceive: (_) {});
+                        Navigator.pop(context);
+                      },
+                      child: const Text("接收")),
+                  TextButton(
+                      onPressed: () async {
+                        await comfirmReceiveFile(file: request.fileName, accept: false);
+                        Navigator.pop(context);
+                      },
+                      child: const Text("取消")),
+                ],
+              );
+            });
+      },
+      discoveryIp: (field0) {
+        setState(() {
+          discoverList.add(field0);
+        });
+      },
+      sendFile: (_) {},
+      startReceive: (_) {},
+      fileProgress: (FileProgress field0) {
+        setState(() {
+          print("receive file progress ${field0.fileName} ${field0.fileProgress}");
+          uploadFileList[field0.fileName] = field0;
+        });
+      },
+    );
 
     print("END RECEIVE event $event");
   }
@@ -162,8 +223,8 @@ class _MainState extends State<Main> {
     }
 
     print("get devicname $devicename");
-    final Directory? downloadsDir = await getDownloadsDirectory();
-    final s = initCore(hostname: devicename, directory: downloadsDir!.path);
+    final downloadsDir = await getDownloadPath();
+    final s = initCore(hostname: devicename, directory: downloadsDir!);
     s.listen(handleEvent);
   }
 

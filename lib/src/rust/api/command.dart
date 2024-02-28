@@ -47,6 +47,43 @@ class Event {
           eventEnum == other.eventEnum;
 }
 
+class FileProgress {
+  final String fileName;
+  final int fileProgress;
+  final bool isError;
+  final double speed;
+
+  /// 0 上传 1 下载
+  final int progressType;
+
+  const FileProgress({
+    required this.fileName,
+    required this.fileProgress,
+    required this.isError,
+    required this.speed,
+    required this.progressType,
+  });
+
+  @override
+  int get hashCode =>
+      fileName.hashCode ^
+      fileProgress.hashCode ^
+      isError.hashCode ^
+      speed.hashCode ^
+      progressType.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FileProgress &&
+          runtimeType == other.runtimeType &&
+          fileName == other.fileName &&
+          fileProgress == other.fileProgress &&
+          isError == other.isError &&
+          speed == other.speed &&
+          progressType == other.progressType;
+}
+
 ///
 class RequestToReceive {
   final String fileName;

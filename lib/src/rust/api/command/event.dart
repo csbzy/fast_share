@@ -29,4 +29,7 @@ sealed class EventEnum with _$EventEnum {
   const factory EventEnum.discoveryIp(
     DiscoveryIp field0,
   ) = EventEnum_DiscoveryIp;
+  const factory EventEnum.fileProgress(
+    FileProgress field0,
+  ) = EventEnum_FileProgress;
 }

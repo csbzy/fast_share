@@ -325,10 +325,39 @@ impl SseDecode for crate::api::command::event::EventEnum {
                 let mut var_field0 = <crate::api::command::DiscoveryIp>::sse_decode(deserializer);
                 return crate::api::command::event::EventEnum::DiscoveryIp(var_field0);
             }
+            6 => {
+                let mut var_field0 = <crate::api::command::FileProgress>::sse_decode(deserializer);
+                return crate::api::command::event::EventEnum::FileProgress(var_field0);
+            }
             _ => {
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseDecode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::api::command::FileProgress {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fileName = <String>::sse_decode(deserializer);
+        let mut var_fileProgress = <i32>::sse_decode(deserializer);
+        let mut var_isError = <bool>::sse_decode(deserializer);
+        let mut var_speed = <f64>::sse_decode(deserializer);
+        let mut var_progressType = <i32>::sse_decode(deserializer);
+        return crate::api::command::FileProgress {
+            file_name: var_fileName,
+            file_progress: var_fileProgress,
+            is_error: var_isError,
+            speed: var_speed,
+            progress_type: var_progressType,
+        };
     }
 }
 
@@ -523,6 +552,9 @@ impl flutter_rust_bridge::IntoDart for crate::api::command::event::EventEnum {
             crate::api::command::event::EventEnum::DiscoveryIp(field0) => {
                 [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
+            crate::api::command::event::EventEnum::FileProgress(field0) => {
+                [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
         }
     }
 }
@@ -534,6 +566,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::command::event::EventEnum>
     for crate::api::command::event::EventEnum
 {
     fn into_into_dart(self) -> crate::api::command::event::EventEnum {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::command::FileProgress {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.file_name.into_into_dart().into_dart(),
+            self.file_progress.into_into_dart().into_dart(),
+            self.is_error.into_into_dart().into_dart(),
+            self.speed.into_into_dart().into_dart(),
+            self.progress_type.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::command::FileProgress
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::command::FileProgress>
+    for crate::api::command::FileProgress
+{
+    fn into_into_dart(self) -> crate::api::command::FileProgress {
         self
     }
 }
@@ -676,7 +732,29 @@ impl SseEncode for crate::api::command::event::EventEnum {
                 <i32>::sse_encode(5, serializer);
                 <crate::api::command::DiscoveryIp>::sse_encode(field0, serializer);
             }
+            crate::api::command::event::EventEnum::FileProgress(field0) => {
+                <i32>::sse_encode(6, serializer);
+                <crate::api::command::FileProgress>::sse_encode(field0, serializer);
+            }
         }
+    }
+}
+
+impl SseEncode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::api::command::FileProgress {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.file_name, serializer);
+        <i32>::sse_encode(self.file_progress, serializer);
+        <bool>::sse_encode(self.is_error, serializer);
+        <f64>::sse_encode(self.speed, serializer);
+        <i32>::sse_encode(self.progress_type, serializer);
     }
 }
 

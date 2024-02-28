@@ -25,6 +25,7 @@ mixin _$EventEnum {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -35,6 +36,7 @@ mixin _$EventEnum {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -45,6 +47,7 @@ mixin _$EventEnum {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -57,6 +60,7 @@ mixin _$EventEnum {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -67,6 +71,7 @@ mixin _$EventEnum {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -77,6 +82,7 @@ mixin _$EventEnum {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -170,6 +176,7 @@ class _$EventEnum_StartImpl implements EventEnum_Start {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) {
     return start(field0);
   }
@@ -183,6 +190,7 @@ class _$EventEnum_StartImpl implements EventEnum_Start {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) {
     return start?.call(field0);
   }
@@ -196,6 +204,7 @@ class _$EventEnum_StartImpl implements EventEnum_Start {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) {
     if (start != null) {
@@ -214,6 +223,7 @@ class _$EventEnum_StartImpl implements EventEnum_Start {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) {
     return start(this);
   }
@@ -227,6 +237,7 @@ class _$EventEnum_StartImpl implements EventEnum_Start {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) {
     return start?.call(this);
   }
@@ -240,6 +251,7 @@ class _$EventEnum_StartImpl implements EventEnum_Start {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) {
     if (start != null) {
@@ -330,6 +342,7 @@ class _$EventEnum_StopImpl implements EventEnum_Stop {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) {
     return stop(field0);
   }
@@ -343,6 +356,7 @@ class _$EventEnum_StopImpl implements EventEnum_Stop {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) {
     return stop?.call(field0);
   }
@@ -356,6 +370,7 @@ class _$EventEnum_StopImpl implements EventEnum_Stop {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) {
     if (stop != null) {
@@ -374,6 +389,7 @@ class _$EventEnum_StopImpl implements EventEnum_Stop {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) {
     return stop(this);
   }
@@ -387,6 +403,7 @@ class _$EventEnum_StopImpl implements EventEnum_Stop {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) {
     return stop?.call(this);
   }
@@ -400,6 +417,7 @@ class _$EventEnum_StopImpl implements EventEnum_Stop {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) {
     if (stop != null) {
@@ -492,6 +510,7 @@ class _$EventEnum_RequestToReceiveImpl implements EventEnum_RequestToReceive {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) {
     return requestToReceive(field0);
   }
@@ -505,6 +524,7 @@ class _$EventEnum_RequestToReceiveImpl implements EventEnum_RequestToReceive {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) {
     return requestToReceive?.call(field0);
   }
@@ -518,6 +538,7 @@ class _$EventEnum_RequestToReceiveImpl implements EventEnum_RequestToReceive {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) {
     if (requestToReceive != null) {
@@ -536,6 +557,7 @@ class _$EventEnum_RequestToReceiveImpl implements EventEnum_RequestToReceive {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) {
     return requestToReceive(this);
   }
@@ -549,6 +571,7 @@ class _$EventEnum_RequestToReceiveImpl implements EventEnum_RequestToReceive {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) {
     return requestToReceive?.call(this);
   }
@@ -562,6 +585,7 @@ class _$EventEnum_RequestToReceiveImpl implements EventEnum_RequestToReceive {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) {
     if (requestToReceive != null) {
@@ -653,6 +677,7 @@ class _$EventEnum_SendFileImpl implements EventEnum_SendFile {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) {
     return sendFile(field0);
   }
@@ -666,6 +691,7 @@ class _$EventEnum_SendFileImpl implements EventEnum_SendFile {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) {
     return sendFile?.call(field0);
   }
@@ -679,6 +705,7 @@ class _$EventEnum_SendFileImpl implements EventEnum_SendFile {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) {
     if (sendFile != null) {
@@ -697,6 +724,7 @@ class _$EventEnum_SendFileImpl implements EventEnum_SendFile {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) {
     return sendFile(this);
   }
@@ -710,6 +738,7 @@ class _$EventEnum_SendFileImpl implements EventEnum_SendFile {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) {
     return sendFile?.call(this);
   }
@@ -723,6 +752,7 @@ class _$EventEnum_SendFileImpl implements EventEnum_SendFile {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) {
     if (sendFile != null) {
@@ -816,6 +846,7 @@ class _$EventEnum_StartReceiveImpl implements EventEnum_StartReceive {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) {
     return startReceive(field0);
   }
@@ -829,6 +860,7 @@ class _$EventEnum_StartReceiveImpl implements EventEnum_StartReceive {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) {
     return startReceive?.call(field0);
   }
@@ -842,6 +874,7 @@ class _$EventEnum_StartReceiveImpl implements EventEnum_StartReceive {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) {
     if (startReceive != null) {
@@ -860,6 +893,7 @@ class _$EventEnum_StartReceiveImpl implements EventEnum_StartReceive {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) {
     return startReceive(this);
   }
@@ -873,6 +907,7 @@ class _$EventEnum_StartReceiveImpl implements EventEnum_StartReceive {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) {
     return startReceive?.call(this);
   }
@@ -886,6 +921,7 @@ class _$EventEnum_StartReceiveImpl implements EventEnum_StartReceive {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) {
     if (startReceive != null) {
@@ -978,6 +1014,7 @@ class _$EventEnum_DiscoveryIpImpl implements EventEnum_DiscoveryIp {
     required TResult Function(SendFile field0) sendFile,
     required TResult Function(StartToReceive field0) startReceive,
     required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
   }) {
     return discoveryIp(field0);
   }
@@ -991,6 +1028,7 @@ class _$EventEnum_DiscoveryIpImpl implements EventEnum_DiscoveryIp {
     TResult? Function(SendFile field0)? sendFile,
     TResult? Function(StartToReceive field0)? startReceive,
     TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
   }) {
     return discoveryIp?.call(field0);
   }
@@ -1004,6 +1042,7 @@ class _$EventEnum_DiscoveryIpImpl implements EventEnum_DiscoveryIp {
     TResult Function(SendFile field0)? sendFile,
     TResult Function(StartToReceive field0)? startReceive,
     TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
     required TResult orElse(),
   }) {
     if (discoveryIp != null) {
@@ -1022,6 +1061,7 @@ class _$EventEnum_DiscoveryIpImpl implements EventEnum_DiscoveryIp {
     required TResult Function(EventEnum_SendFile value) sendFile,
     required TResult Function(EventEnum_StartReceive value) startReceive,
     required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
   }) {
     return discoveryIp(this);
   }
@@ -1035,6 +1075,7 @@ class _$EventEnum_DiscoveryIpImpl implements EventEnum_DiscoveryIp {
     TResult? Function(EventEnum_SendFile value)? sendFile,
     TResult? Function(EventEnum_StartReceive value)? startReceive,
     TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
   }) {
     return discoveryIp?.call(this);
   }
@@ -1048,6 +1089,7 @@ class _$EventEnum_DiscoveryIpImpl implements EventEnum_DiscoveryIp {
     TResult Function(EventEnum_SendFile value)? sendFile,
     TResult Function(EventEnum_StartReceive value)? startReceive,
     TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
     required TResult orElse(),
   }) {
     if (discoveryIp != null) {
@@ -1065,5 +1107,174 @@ abstract class EventEnum_DiscoveryIp implements EventEnum {
   DiscoveryIp get field0;
   @JsonKey(ignore: true)
   _$$EventEnum_DiscoveryIpImplCopyWith<_$EventEnum_DiscoveryIpImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$EventEnum_FileProgressImplCopyWith<$Res> {
+  factory _$$EventEnum_FileProgressImplCopyWith(
+          _$EventEnum_FileProgressImpl value,
+          $Res Function(_$EventEnum_FileProgressImpl) then) =
+      __$$EventEnum_FileProgressImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({FileProgress field0});
+}
+
+/// @nodoc
+class __$$EventEnum_FileProgressImplCopyWithImpl<$Res>
+    extends _$EventEnumCopyWithImpl<$Res, _$EventEnum_FileProgressImpl>
+    implements _$$EventEnum_FileProgressImplCopyWith<$Res> {
+  __$$EventEnum_FileProgressImplCopyWithImpl(
+      _$EventEnum_FileProgressImpl _value,
+      $Res Function(_$EventEnum_FileProgressImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$EventEnum_FileProgressImpl(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as FileProgress,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$EventEnum_FileProgressImpl implements EventEnum_FileProgress {
+  const _$EventEnum_FileProgressImpl(this.field0);
+
+  @override
+  final FileProgress field0;
+
+  @override
+  String toString() {
+    return 'EventEnum.fileProgress(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$EventEnum_FileProgressImpl &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$EventEnum_FileProgressImplCopyWith<_$EventEnum_FileProgressImpl>
+      get copyWith => __$$EventEnum_FileProgressImplCopyWithImpl<
+          _$EventEnum_FileProgressImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Start field0) start,
+    required TResult Function(Stop field0) stop,
+    required TResult Function(RequestToReceive field0) requestToReceive,
+    required TResult Function(SendFile field0) sendFile,
+    required TResult Function(StartToReceive field0) startReceive,
+    required TResult Function(DiscoveryIp field0) discoveryIp,
+    required TResult Function(FileProgress field0) fileProgress,
+  }) {
+    return fileProgress(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Start field0)? start,
+    TResult? Function(Stop field0)? stop,
+    TResult? Function(RequestToReceive field0)? requestToReceive,
+    TResult? Function(SendFile field0)? sendFile,
+    TResult? Function(StartToReceive field0)? startReceive,
+    TResult? Function(DiscoveryIp field0)? discoveryIp,
+    TResult? Function(FileProgress field0)? fileProgress,
+  }) {
+    return fileProgress?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Start field0)? start,
+    TResult Function(Stop field0)? stop,
+    TResult Function(RequestToReceive field0)? requestToReceive,
+    TResult Function(SendFile field0)? sendFile,
+    TResult Function(StartToReceive field0)? startReceive,
+    TResult Function(DiscoveryIp field0)? discoveryIp,
+    TResult Function(FileProgress field0)? fileProgress,
+    required TResult orElse(),
+  }) {
+    if (fileProgress != null) {
+      return fileProgress(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(EventEnum_Start value) start,
+    required TResult Function(EventEnum_Stop value) stop,
+    required TResult Function(EventEnum_RequestToReceive value)
+        requestToReceive,
+    required TResult Function(EventEnum_SendFile value) sendFile,
+    required TResult Function(EventEnum_StartReceive value) startReceive,
+    required TResult Function(EventEnum_DiscoveryIp value) discoveryIp,
+    required TResult Function(EventEnum_FileProgress value) fileProgress,
+  }) {
+    return fileProgress(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(EventEnum_Start value)? start,
+    TResult? Function(EventEnum_Stop value)? stop,
+    TResult? Function(EventEnum_RequestToReceive value)? requestToReceive,
+    TResult? Function(EventEnum_SendFile value)? sendFile,
+    TResult? Function(EventEnum_StartReceive value)? startReceive,
+    TResult? Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult? Function(EventEnum_FileProgress value)? fileProgress,
+  }) {
+    return fileProgress?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(EventEnum_Start value)? start,
+    TResult Function(EventEnum_Stop value)? stop,
+    TResult Function(EventEnum_RequestToReceive value)? requestToReceive,
+    TResult Function(EventEnum_SendFile value)? sendFile,
+    TResult Function(EventEnum_StartReceive value)? startReceive,
+    TResult Function(EventEnum_DiscoveryIp value)? discoveryIp,
+    TResult Function(EventEnum_FileProgress value)? fileProgress,
+    required TResult orElse(),
+  }) {
+    if (fileProgress != null) {
+      return fileProgress(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class EventEnum_FileProgress implements EventEnum {
+  const factory EventEnum_FileProgress(final FileProgress field0) =
+      _$EventEnum_FileProgressImpl;
+
+  @override
+  FileProgress get field0;
+  @JsonKey(ignore: true)
+  _$$EventEnum_FileProgressImplCopyWith<_$EventEnum_FileProgressImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

@@ -44,8 +44,20 @@ message Event {
         SendFile send_file = 4;
         StartToReceive start_receive=5;
         DiscoveryIP discovery_ip = 6;
+        FileProgress file_progress = 7;
     }
 }
+
+message FileProgress {
+    string file_name = 1;
+    int32 file_progress = 2;
+    bool is_error=3;
+    double speed=4;
+    int32 progress_type =5; // 0 上传 1 下载
+}
+
+
+
 
 message DiscoveryIP {
     string addr = 1;
@@ -97,7 +109,7 @@ message Finish {
 
 message FileMetaData {
     string FileName = 1;
-    int32 fileSize =2;
+    uint64 fileSize =2;
     string md5=3;
 }
 

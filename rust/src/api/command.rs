@@ -42,7 +42,7 @@ pub struct StartToReceive {}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Event {
-    #[prost(oneof = "event::EventEnum", tags = "1, 2, 3, 4, 5, 6")]
+    #[prost(oneof = "event::EventEnum", tags = "1, 2, 3, 4, 5, 6, 7")]
     pub event_enum: ::core::option::Option<event::EventEnum>,
 }
 /// Nested message and enum types in `Event`.
@@ -62,7 +62,24 @@ pub mod event {
         StartReceive(super::StartToReceive),
         #[prost(message, tag = "6")]
         DiscoveryIp(super::DiscoveryIp),
+        #[prost(message, tag = "7")]
+        FileProgress(super::FileProgress),
     }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FileProgress {
+    #[prost(string, tag = "1")]
+    pub file_name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "2")]
+    pub file_progress: i32,
+    #[prost(bool, tag = "3")]
+    pub is_error: bool,
+    #[prost(double, tag = "4")]
+    pub speed: f64,
+    /// 0 上传 1 下载
+    #[prost(int32, tag = "5")]
+    pub progress_type: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -149,8 +166,8 @@ pub struct Finish {}
 pub struct FileMetaData {
     #[prost(string, tag = "1")]
     pub file_name: ::prost::alloc::string::String,
-    #[prost(int32, tag = "2")]
-    pub file_size: i32,
+    #[prost(uint64, tag = "2")]
+    pub file_size: u64,
     #[prost(string, tag = "3")]
     pub md5: ::prost::alloc::string::String,
 }
