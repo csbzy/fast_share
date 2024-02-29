@@ -221,7 +221,7 @@ impl JustShareCore {
         let num_threads = self.config.send_file_worker_num;
         let chunk_size = (file_paths.len() + num_threads - 1) / num_threads;
 
-        // 开辟self.config.send_file_worker_num个线程处理文件
+        // 开self.config.send_file_worker_num个线程处理文件
         file_paths.chunks(chunk_size).for_each(|chunk| {
             let chunk: Vec<String> = chunk.to_vec();
             let addr = message.addr.clone();
@@ -269,7 +269,7 @@ impl JustShareCore {
         );
         debug!("finish send request: file meta data",);
 
-        let chunk_size = 30 * 1024 * 1024; // 每包最大30MB
+        let chunk_size = 3 * 1024 * 1024; // 每包最大30MB
         let mut buffer = vec![0; chunk_size];
         let mut offset: u64 = 0;
         let start_time = std::time::Instant::now();

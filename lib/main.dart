@@ -94,8 +94,8 @@ class _MainState extends State<Main> {
                       ))),
               ElevatedButton(
                   onPressed: () async {
-                    if (selectedIndex == "") {
-                      print("请选择则接收addr");
+                    if (selectedIndex == -1) {
+                      print("请选择接收addr");
                       return;
                     }
                     setState(() {

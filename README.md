@@ -1,16 +1,17 @@
 # just_share
 
-A new Flutter project.
+一个基于flutter和rust的跨平台本地局域网分享/传输数据工具
 
 ## Getting Started
+## Flutter UI 层
+- 使用 Flutter 框架提供用户界面
+- 包括屏幕、小部件和用户交互的导航逻辑
 
-This project is a starting point for a Flutter application.
+## Rust 后端逻辑
+- 使用 Rust 实现的文件分享核心逻辑
+- 包括文件读写创建、网络、安全性和业务逻辑
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# graph LR
+    A[Flutter UI] -->|FFI| B[Rust Backend]
+    B -->|FFI| A
