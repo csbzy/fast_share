@@ -17,12 +17,12 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::net::UdpSocket;
 use tokio::sync::mpsc;
 use tokio::time::Instant;
 use tokio::{
-    io::{self, AsyncWriteExt},
     sync::mpsc::{Receiver, Sender},
     sync::Mutex,
 };
@@ -408,7 +408,8 @@ impl JustShareCore {
 
         debug!("do_receive_file upload file get lock");
         let save_path = core_clone.config.save_directory.clone();
-        let event_to_frontend_channel = core_clone.event_to_frontend_channel.clone().unwrap();
+        let event_to_frontend_channel: StreamSink<Event> =
+            core_clone.event_to_frontend_channel.clone().unwrap();
 
         flutter_rust_bridge::spawn(async move {
             debug!("just share core do to receive upload file spawn");
@@ -552,8 +553,8 @@ impl JustShareCore {
         };
     }
     pub async fn discovery(core: Arc<Mutex<JustShareCore>>) {
-        let core_clone = core.lock().await;
-        let event_to_frontend = core_clone.event_to_frontend_channel.clone().unwrap();
+        let core_clone = core.clone(); //core.lock().await;
+        let core_lock = core_clone.lock().await;
 
         let local_ip = JustShareCore::get_local_ip();
         let local_ip = local_ip.await.unwrap();
@@ -561,20 +562,17 @@ impl JustShareCore {
         let socket = UdpSocket::bind("0.0.0.0:9999").await.unwrap();
         let broadcast_addr = "255.255.255.255:9999";
         socket.set_broadcast(true).unwrap();
-
-        let rx = core_clone.discovery_channel_receiver.clone();
-        let tx = core_clone.discovery_channel_sender.clone();
-        let sender = tx.lock().await;
-        let _ = sender.send(()).await;
-
         debug!("server local ip {:}", socket.local_addr().unwrap().ip());
-        let my_hostname = core_clone.config.hostname.clone();
+        let my_hostname = core_lock.config.hostname.clone();
 
-        let db = core_clone.discovery_db.clone();
+        let rx = core_lock.discovery_channel_receiver.clone();
+        drop(core_lock);
+
         flutter_rust_bridge::spawn(async move {
             let mut buf: [u8; 1024] = [0; 1024];
+            let core_clone = core.clone();
+            let mut rx = rx.lock().await;
             loop {
-                let mut rx = rx.lock().await;
                 tokio::select! {
                     Ok((number_of_bytes,src_addr))=socket.recv_from(&mut buf)=>{
                         debug!("Received {} bytes from {:?}", number_of_bytes, src_addr);
@@ -617,13 +615,11 @@ impl JustShareCore {
                             }
                         }
                         debug!("wait for db lock ");
+                        let core_lock = core_clone.lock().await;
+                        let event_to_frontend = core_lock.event_to_frontend_channel.clone().unwrap();
+                        let db = core_lock.discovery_db.clone();
                         let mut db = db.lock().await;
                         debug!("get db lock ");
-
-                        if let Some(ip) = db.get(&other_hostname) {
-                            debug!("had receive from ip: {}", ip);
-                            continue
-                        }
 
                         db.insert(other_hostname.clone(), src_ip.to_string());
 
@@ -641,11 +637,6 @@ impl JustShareCore {
                     }
 
                     Some(()) =rx.recv() => {
-                        debug!("discovery request");
-                        {
-                            let mut db = db.lock().await;
-                            db.clear();
-                        }
                                     // Send a discovery message
                             let discovery_message = DiscoveryEvent{discovery_event_enum:Some(
                             discovery_event::DiscoveryEventEnum::DiscoveryReq(DiscoveryReq{

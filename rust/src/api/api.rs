@@ -64,10 +64,11 @@ pub async fn init_core(sink: StreamSink<Event>, hostname: String, directory: Str
 
         flutter_rust_bridge::spawn(async move {
             JUSTSHARE_CORE.init_core(hostname, directory).await;
-            JUSTSHARE_CORE.async_event_to_frontend(sink).await;
             JUSTSHARE_CORE.start_receive_file().await;
             error!("start discovery addr");
             JUSTSHARE_CORE.discovery().await;
         });
     });
+
+    JUSTSHARE_CORE.async_event_to_frontend(sink).await;
 }

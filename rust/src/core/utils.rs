@@ -1,6 +1,6 @@
 use std::{fs::File, io::Read};
 
-use md5::{Context, Digest};
+
 
 pub fn calc_md5(path: &str) -> String {
     let mut file = File::open(path).unwrap();
