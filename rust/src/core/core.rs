@@ -9,17 +9,18 @@ use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
 use lazy_static::lazy_static;
 use log::{debug, error};
+use socket2::{Domain, Protocol, Socket, Type};
+
 use prost::Message;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::io::AsyncReadExt;
-use tokio::net::UdpSocket;
+use tokio::net::TcpListener;
 use tokio::sync::mpsc;
 use tokio::time::Instant;
 use tokio::{
@@ -28,7 +29,6 @@ use tokio::{
 };
 use tokio_stream::{wrappers::ReceiverStream, Stream};
 use tonic::codec::CompressionEncoding;
-
 use tonic::{transport::Server, Request, Response, Status, Streaming};
 lazy_static! {
     pub static ref JUSTSHARE_CORE: MutexJustShareCore = MutexJustShareCore::new();
@@ -94,13 +94,17 @@ impl MutexJustShareCore {
     pub async fn start_receive_file(&self) {
         debug!("start handle receive file");
         let core_clone = self.core.clone();
-        let core_lock = core_clone.lock().await;
-        let port = core_lock.config.port.clone();
+        let listener = TcpListener::bind("0.0.0.0:0").await.unwrap();
+        let actual_addr = listener.local_addr().unwrap();
+        let mut core_lock = core_clone.lock().await;
+        core_lock.config.port = actual_addr.port();
+        debug!("listen at {}", actual_addr);
         flutter_rust_bridge::spawn(async move {
             debug!("ENTER SPAWN start handle receive file");
-            let addr = format!("0.0.0.0:{}", port.to_string()).parse().unwrap();
             let sf = MyShareFileServer::default();
-            debug!("fileListenServer listening on {}", addr);
+            // debug!("fileListenServer listening on {}", addr);
+            println!("Server listening on: {}", actual_addr);
+
             Server::builder()
                 .add_service(
                     ShareFileServer::new(sf)
@@ -108,9 +112,11 @@ impl MutexJustShareCore {
                         .max_decoding_message_size(256 * 1024 * 1024)
                         .max_encoding_message_size(256 * 1024 * 1024),
                 )
-                .serve(addr)
+                .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener))
                 .await
                 .unwrap();
+
+            // let actual_socket_address = server.local_addr();
             debug!("LEAVE SPAWN start handle receive file");
         });
 
@@ -172,7 +178,7 @@ struct JustShareCore {
     pub discovery_channel_sender: Arc<Mutex<Sender<()>>>,
     pub discovery_channel_receiver: Arc<Mutex<Receiver<()>>>,
     pub comfirm_receive_db: Db,
-    pub discovery_db: Arc<Mutex<HashMap<String, String>>>,
+    pub discovery_db: Arc<Mutex<HashMap<String, (String, String)>>>,
 }
 
 impl JustShareCore {
@@ -191,10 +197,11 @@ impl JustShareCore {
         c
     }
 
-    async fn send_file(&mut self, message: SendFile) {
+    async fn send_file(&self, message: SendFile) {
         debug!("enter core send: {:?}", message);
-        let client = ShareFileClient::connect(format!("http://{:}", message.addr)).await;
+        let client = ShareFileClient::connect(format!("http://{:}", message.addr.clone())).await;
         let file_paths = message.path.clone();
+        debug!("connect server: {:?}", client);
 
         if file_paths.is_empty() {
             return;
@@ -534,14 +541,12 @@ impl JustShareCore {
 
     pub async fn get_local_ip() -> Result<Ipv4Addr, String> {
         return {
-            let socket1 = UdpSocket::bind("0.0.0.0:0")
-                .await
-                .map_err(|e| format!("Failed to bind socket: {}", e));
+            let socket1 =
+                UdpSocket::bind("0.0.0.0:0").map_err(|e| format!("Failed to bind socket: {}", e));
             let socket1 = socket1.unwrap();
 
             let _ = socket1
                 .connect("8.8.8.8:80")
-                .await
                 .map_err(|e| format!("Failed to connect to remote host: {}", e));
             socket1
                 .local_addr()
@@ -559,13 +564,35 @@ impl JustShareCore {
         let local_ip = JustShareCore::get_local_ip();
         let local_ip = local_ip.await.unwrap();
 
-        let socket = UdpSocket::bind("0.0.0.0:9999").await.unwrap();
-        let broadcast_addr = "255.255.255.255:9999";
-        socket.set_broadcast(true).unwrap();
-        debug!("server local ip {:}", socket.local_addr().unwrap().ip());
+        // 这是广播逻辑
+        // let socket = UdpSocket::bind("0.0.0.0:9999").await.unwrap();
+        // let broadcast_addr = "255.255.255.255:9999";
+        // socket.set_broadcast(true).unwrap();
+        // debug!("server local ip {:}", socket.local_addr().unwrap().ip());
+
+        let socket = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP)).unwrap();
+        socket.set_reuse_address(true).unwrap();
+
+        let address: SocketAddr = "0.0.0.0:12345".parse().unwrap();
+        socket.bind(&address.into()).unwrap();
+
+        // Convert the socket into a std::net::UdpSocket
+        let std_socket = UdpSocket::from(socket);
+        let socket = tokio::net::UdpSocket::from_std(std_socket).unwrap();
+
+        // socket.set_multicast_loop_v4(true).unwrap();
+        let addr = "224.0.0.251".parse().unwrap();
+        let multicast_addr = SocketAddrV4::new(addr, address.port());
+
+        // let interface = Ipv4Addr::new(0, 0, 0, 0);
+        socket.join_multicast_v4(addr, local_ip).unwrap();
+        socket.set_multicast_loop_v4(true).unwrap();
+
         let my_hostname = core_lock.config.hostname.clone();
 
         let rx = core_lock.discovery_channel_receiver.clone();
+        let my_listen_port = core_lock.config.port;
+
         drop(core_lock);
 
         flutter_rust_bridge::spawn(async move {
@@ -574,82 +601,97 @@ impl JustShareCore {
             let mut rx = rx.lock().await;
             loop {
                 tokio::select! {
-                    Ok((number_of_bytes,src_addr))=socket.recv_from(&mut buf)=>{
-                        debug!("Received {} bytes from {:?}", number_of_bytes, src_addr);
-                        let src_ip = src_addr.ip();
-                        debug!("srcip: {:?} local_ip: {:?}", src_ip,local_ip);
-                        if src_ip == local_ip{
-                            continue
-                        }
+                                    Ok((number_of_bytes,src_addr))=socket.recv_from(&mut buf)=>{
+                                        debug!("Received {} bytes from {:?}", number_of_bytes, src_addr);
+                                        let src_ip = src_addr.ip();
+                                        debug!("srcip: {:?} local_ip: {:?}", src_ip,local_ip);
+                                        if src_ip == local_ip{
+                                            continue
+                                        }
 
-                        debug!("receive raw buf:{:?}",&buf[..number_of_bytes]);
-                        let message =
-                        match DiscoveryEvent::decode(&buf[..number_of_bytes]){
-                            Ok(message) => message,
-                            Err(e) =>{
-                                 error!("decode message error: {:?}", e);
-                                 continue;
-                            }
-                        };
+                                        debug!("receive raw buf:{:?}",&buf[..number_of_bytes]);
+                                        let message =
+                                        match DiscoveryEvent::decode(&buf[..number_of_bytes]){
+                                            Ok(message) => message,
+                                            Err(e) =>{
+                                                 error!("decode message error: {:?}", e);
+                                                 continue;
+                                            }
+                                        };
 
-                        let src_ip = src_addr.ip();
-                        debug!("Message after decode {:?}", message);
-                        let other_hostname:String;
-                        match message.discovery_event_enum.unwrap() {
-                            DiscoveryEventEnum::DiscoveryReq(DiscoveryReq {self_hostname}) => {
-                                debug!("get discovery req from: {:?}", src_addr);
-                                let resp = DiscoveryEvent{discovery_event_enum:Some(
-                                    discovery_event::DiscoveryEventEnum::DiscoveryResp(DiscoveryResp{
-                                        self_hostname:my_hostname.clone(),
-                                }))};
-                                let mut buf = vec![];
-                                resp.encode(&mut buf).unwrap();
-                                let res = socket.send_to(&buf, src_addr).await;
-                                debug!("send hello res: {:?} to {:?}", res,src_addr);
-                                other_hostname = self_hostname;
-                            }
+                                        debug!("wait for db lock ");
+                                        let core_lock = core_clone.lock().await;
+                                        let event_to_frontend = core_lock.event_to_frontend_channel.clone().unwrap();
+                                        let db = core_lock.discovery_db.clone();
+                                        let mut db = db.lock().await;
+                                        debug!("get db lock ");
 
-                            DiscoveryEventEnum::DiscoveryResp(  DiscoveryResp { self_hostname:hostname}) => {
-                                debug!("discovery hostname:{:?} ip: {:?}", hostname,src_ip);
-                                other_hostname = hostname;
-                            }
-                        }
-                        debug!("wait for db lock ");
-                        let core_lock = core_clone.lock().await;
-                        let event_to_frontend = core_lock.event_to_frontend_channel.clone().unwrap();
-                        let db = core_lock.discovery_db.clone();
-                        let mut db = db.lock().await;
-                        debug!("get db lock ");
+                                        let src_ip = src_addr.ip();
+                                        debug!("Message after decode {:?}", message);
+                                        let other_hostname:String;
+                                        let other_listen_port:String ;
+                                        match message.discovery_event_enum.unwrap() {
+                                            DiscoveryEventEnum::DiscoveryReq(DiscoveryReq {
+                                                discovery:Some(Discovery{self_hostname,self_listen_port})} ) => {
+                                                debug!("get discovery req from: {:?}", src_addr);
+                                                let resp = DiscoveryEvent{discovery_event_enum:Some(
+                                                    discovery_event::DiscoveryEventEnum::DiscoveryResp(DiscoveryResp{
+                                                        discovery:Some(Discovery{
+                                                            self_hostname:my_hostname.clone(),
+                                                            self_listen_port:my_listen_port.to_string(),
+                                                        })
+                                                }))};
+                                                let mut buf = vec![];
+                                                resp.encode(&mut buf).unwrap();
+                                                let res = socket.send_to(&buf, src_addr).await;
+                                                debug!("send hello res: {:?} to {:?}", res,src_addr);
+                                                other_hostname = self_hostname;
+                                                other_listen_port= self_listen_port;
+                                            }
 
-                        db.insert(other_hostname.clone(), src_ip.to_string());
+                                            DiscoveryEventEnum::DiscoveryResp(  DiscoveryResp { discovery:Some(Discovery{self_hostname,self_listen_port})}) => {
+                                                debug!("discovery hostname:{:?} ip: {:?}", self_hostname,src_ip);
+                                                other_hostname = self_hostname;
+                                                other_listen_port= self_listen_port;
 
-                        // Send the message to the frontend
-                        let event = Event {
-                        event_enum: Some(event::EventEnum::DiscoveryIp(
-                        crate::api::command::DiscoveryIp {
-                            addr: src_ip.to_string(),
-                            hostname:other_hostname,
-                        },
-                         )),
-                        };
-                        JustShareCore::event_to_frontend(event_to_frontend.clone(), event);
+                                            }
+                                            _r =>{
+                                                error!("unknown message {:?}", _r);
+                                                continue;
+                                            }
+                                        }
 
-                    }
 
-                    Some(()) =rx.recv() => {
-                                    // Send a discovery message
-                            let discovery_message = DiscoveryEvent{discovery_event_enum:Some(
-                            discovery_event::DiscoveryEventEnum::DiscoveryReq(DiscoveryReq{
-                                self_hostname:my_hostname.clone(),
-                            }))};
-                            let mut buf = vec![];
-                            discovery_message.encode(&mut buf).unwrap();
-                            let result = socket
-                            .send_to(&buf, &broadcast_addr)
-                            .await;
-                        debug!(" send discovery result: {:?} ", result,);
-                    }
-                }
+                                        db.insert(other_hostname.clone(), (src_ip.to_string(), other_listen_port.to_string()));
+                                        let other_addr = src_ip.to_string() + ":" + &other_listen_port;
+                                        // Send the message to the frontend
+                                        let event = Event {
+                                        event_enum: Some(event::EventEnum::DiscoveryIp(
+                                        crate::api::command::DiscoveryIp {
+                                            addr: other_addr,
+                                            hostname:other_hostname,
+                                        },
+                                         )),
+                                        };
+                                        JustShareCore::event_to_frontend(event_to_frontend.clone(), event);
+
+                                    }
+
+                                    Some(()) =rx.recv() => {
+                                                    // Send a discovery message
+                                            let discovery_message = DiscoveryEvent{discovery_event_enum:Some(
+                                            discovery_event::DiscoveryEventEnum::DiscoveryReq(DiscoveryReq{
+                                                discovery:Some(Discovery{
+                                                    self_hostname:my_hostname.clone(),
+                                                    self_listen_port: my_listen_port.to_string()}) })
+                )};
+                                            let mut buf = vec![];
+                                            discovery_message.encode(&mut buf).unwrap();
+                                            let result = socket
+                                            .send_to(&buf, &multicast_addr).await;
+                                        debug!(" send discovery result: {:?} ", result,);
+                                    }
+                                }
             }
         });
     }

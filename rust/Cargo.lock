@@ -1047,6 +1047,7 @@ dependencies = [
  "md5",
  "prost",
  "simplelog",
+ "socket2",
  "tokio",
  "tokio-stream",
  "tonic",

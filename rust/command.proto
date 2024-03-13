@@ -74,11 +74,16 @@ message DiscoveryEvent {
 }
 
 message DiscoveryReq{
-    string self_hostname=1;
+    Discovery discovery = 1;
 }
 
 message DiscoveryResp {
+    Discovery discovery = 1;
+}
+
+message Discovery {
     string self_hostname=1;
+    string self_listen_port=2;
 }
 
 // 上传文件,rust层之间通信

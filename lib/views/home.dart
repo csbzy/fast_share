@@ -69,8 +69,9 @@ class HomeScaffold extends StatelessWidget {
                               if (result != null) {
                                 List<File> files = result.paths.map((path) => File(path!)).toList();
                                 final filePaths = files.map((file) => file.path).toList();
-                                String ipAddress = model.discoverList[model.selectedIndex]!.addr.split(':')[0];
-                                await sendFile(message: SendFile(path: filePaths, addr: "$ipAddress:8965"));
+                                String ipAddress = model.discoverList[model.selectedIndex]!.addr;
+                                logger.d("send file to $ipAddress");
+                                await sendFile(message: SendFile(path: filePaths, addr: ipAddress));
                               } else {
                                 // User canceled the picker
                               }

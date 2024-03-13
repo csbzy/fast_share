@@ -112,14 +112,22 @@ pub mod discovery_event {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DiscoveryReq {
-    #[prost(string, tag = "1")]
-    pub self_hostname: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "1")]
+    pub discovery: ::core::option::Option<Discovery>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DiscoveryResp {
+    #[prost(message, optional, tag = "1")]
+    pub discovery: ::core::option::Option<Discovery>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Discovery {
     #[prost(string, tag = "1")]
     pub self_hostname: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub self_listen_port: ::prost::alloc::string::String,
 }
 /// 上传文件,rust层之间通信
 #[allow(clippy::derive_partial_eq_without_eq)]
